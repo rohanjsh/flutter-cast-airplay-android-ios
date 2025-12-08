@@ -1,3 +1,4 @@
+export '../controllers/casting_controller_scope.dart';
 export 'device_selector_widget.dart';
 export 'header_widget.dart';
 export 'media_preview_widgets.dart';

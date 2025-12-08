@@ -4,13 +4,16 @@ export 'app.dart';
 export 'constants/strings.dart';
 
 // Controllers
-export 'controllers/playback_controller.dart';
+export 'controllers/casting_controller.dart';
 
 // Models
 export 'models/models.dart';
 
 // Screens
 export 'screens/cast_sender_screen.dart';
+
+// State
+export 'state/casting_ui_state.dart';
 
 // Theme
 export 'theme/theme.dart';

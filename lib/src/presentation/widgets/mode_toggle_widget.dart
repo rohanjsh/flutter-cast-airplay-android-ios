@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
+import '../controllers/casting_controller_scope.dart';
 import '../models/models.dart';
 import '../theme/theme.dart';
 
 /// Widget for toggling between audio and video modes.
 ///
 /// Displays a segmented control with audio and video options.
+/// Accesses [CastingController] via [CastingControllerScope].
 class ModeToggleWidget extends StatelessWidget {
-  final CastingMode currentMode;
-  final Function(CastingMode) onModeChanged;
-
-  const ModeToggleWidget({
-    super.key,
-    required this.currentMode,
-    required this.onModeChanged,
-  });
+  const ModeToggleWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final state = CastingControllerScope.stateOf(context);
+    final controller = CastingControllerScope.of(context);
+    final currentMode = state.castingMode;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.fade(AppColors.opacityMinimal),
@@ -33,7 +32,7 @@ class ModeToggleWidget extends StatelessWidget {
               icon: Icons.music_note,
               label: UIStrings.audioMode,
               isSelected: currentMode == CastingMode.audio,
-              onTap: () => onModeChanged(CastingMode.audio),
+              onTap: () => controller.setCastingMode(CastingMode.audio),
             ),
           ),
           const SizedBox(width: AppSpacing.paddingXSmall),
@@ -42,7 +41,7 @@ class ModeToggleWidget extends StatelessWidget {
               icon: Icons.play_circle_filled,
               label: UIStrings.videoMode,
               isSelected: currentMode == CastingMode.video,
-              onTap: () => onModeChanged(CastingMode.video),
+              onTap: () => controller.setCastingMode(CastingMode.video),
             ),
           ),
         ],
@@ -97,4 +96,3 @@ class _ModeButton extends StatelessWidget {
     );
   }
 }
-

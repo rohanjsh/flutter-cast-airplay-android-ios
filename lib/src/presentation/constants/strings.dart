@@ -52,5 +52,18 @@ class UIStrings {
   static const String videoMode = 'Video';
   static const String selectDevice = 'Select Device';
   static const String deviceConnected = 'Connected';
-  static const String deviceOffline = 'Offline';
+  static const String deviceAvailable = 'Available';
+
+  // AirPlay
+  static const String airPlay = 'AirPlay';
+  static const String airPlayDescription =
+      'Stream to Apple TV & AirPlay devices';
+
+  // Disconnect
+  static const String disconnect = 'Disconnect';
+
+  // Device Discovery
+  static const String scanningDevices = 'Scanning for devices...';
+  static const String noDevicesFound =
+      'No devices found.\nMake sure your device is on the same network.';
 }

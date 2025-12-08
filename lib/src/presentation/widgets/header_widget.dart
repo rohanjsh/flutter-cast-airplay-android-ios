@@ -1,20 +1,35 @@
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
+import '../controllers/casting_controller_scope.dart';
 import '../theme/theme.dart';
+import 'device_selector_widget.dart';
 
 /// Header widget displaying app title and cast button.
 ///
 /// Shows the app branding on the left and a cast button on the right.
+/// Tapping the cast button opens the device selector bottom sheet.
 class HeaderWidget extends StatelessWidget {
-  final VoidCallback onCastPressed;
+  /// Whether a device is currently connected.
   final bool isDeviceSelected;
 
-  const HeaderWidget({
-    super.key,
-    required this.onCastPressed,
-    required this.isDeviceSelected,
-  });
+  const HeaderWidget({super.key, required this.isDeviceSelected});
+
+  Future<void> _showDeviceSelector(BuildContext context) async {
+    final controller = CastingControllerScope.of(context);
+    await controller.startDiscovery();
+
+    if (!context.mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CastingControllerScope(
+        controller: controller,
+        child: const DeviceSelectorWidget(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +42,10 @@ class HeaderWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const _AppBranding(),
-          _CastButton(onTap: onCastPressed, isSelected: isDeviceSelected),
+          _CastButton(
+            onTap: () => _showDeviceSelector(context),
+            isSelected: isDeviceSelected,
+          ),
         ],
       ),
     );
@@ -80,4 +98,3 @@ class _CastButton extends StatelessWidget {
     );
   }
 }
-

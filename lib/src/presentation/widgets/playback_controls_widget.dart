@@ -1,41 +1,34 @@
 import 'package:flutter/material.dart';
 
-import '../models/models.dart';
+import '../controllers/casting_controller_scope.dart';
 import '../theme/theme.dart';
 
 /// Widget displaying playback controls with play/pause, skip, and progress bar.
+///
+/// Accesses [CastingController] via [CastingControllerScope] - no prop drilling.
+/// Works with both remote casting and local playback.
 class PlaybackControlsWidget extends StatelessWidget {
-  final PlaybackState state;
-  final VoidCallback onPlayPause;
-  final VoidCallback onSkipPrevious;
-  final VoidCallback onSkipNext;
-  final Function(double) onProgressChanged;
-
-  const PlaybackControlsWidget({
-    super.key,
-    required this.state,
-    required this.onPlayPause,
-    required this.onSkipPrevious,
-    required this.onSkipNext,
-    required this.onProgressChanged,
-  });
+  const PlaybackControlsWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final state = CastingControllerScope.stateOf(context);
+    final controller = CastingControllerScope.of(context);
+
     return Column(
       children: [
         _TransportControls(
           isPlaying: state.isPlaying,
-          onPlayPause: onPlayPause,
-          onSkipPrevious: onSkipPrevious,
-          onSkipNext: onSkipNext,
+          onPlayPause: controller.togglePlayPause,
+          onSkipPrevious: controller.skipBackward,
+          onSkipNext: controller.skipForward,
         ),
         const SizedBox(height: AppSpacing.paddingXLarge),
         _ProgressBar(
           progress: state.progress,
-          currentPosition: state.currentPosition,
-          totalDuration: state.totalDuration,
-          onProgressChanged: onProgressChanged,
+          currentPosition: state.currentPositionSeconds,
+          totalDuration: state.totalDurationSeconds,
+          onProgressChanged: controller.seekToProgress,
         ),
       ],
     );

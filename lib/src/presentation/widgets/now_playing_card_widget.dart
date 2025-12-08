@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
+import '../controllers/casting_controller_scope.dart';
 import '../models/models.dart';
 import '../theme/theme.dart';
 import 'media_preview_widgets.dart';
@@ -8,66 +9,33 @@ import 'mode_toggle_widget.dart';
 import 'playback_controls_widget.dart';
 
 /// Main now playing card widget combining all playback UI elements.
+///
+/// Accesses [CastingController] via [CastingControllerScope] - no prop drilling.
 class NowPlayingCardWidget extends StatelessWidget {
-  final PlaybackState state;
-  final List<CastDevice> availableDevices;
-  final Function(CastingMode) onModeChanged;
-  final VoidCallback onPlayPause;
-  final VoidCallback onSkipPrevious;
-  final VoidCallback onSkipNext;
-  final Function(double) onProgressChanged;
-
-  const NowPlayingCardWidget({
-    super.key,
-    required this.state,
-    required this.availableDevices,
-    required this.onModeChanged,
-    required this.onPlayPause,
-    required this.onSkipPrevious,
-    required this.onSkipNext,
-    required this.onProgressChanged,
-  });
-
-  bool get _isAudioMode => state.castingMode == CastingMode.audio;
-  bool get _hasSelectedDevice => state.selectedDevice != null;
-
-  String _getDeviceName(String? deviceId) {
-    final device = availableDevices.firstWhere(
-      (d) => d.id == deviceId,
-      orElse: () => availableDevices.first,
-    );
-    return device.name;
-  }
+  const NowPlayingCardWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final state = CastingControllerScope.stateOf(context);
+    final isAudioMode = state.castingMode == CastingMode.audio;
+    final hasSelectedDevice = state.selectedDeviceId != null;
+
     return Container(
       decoration: AppDecorations.cardGradient,
       padding: const EdgeInsets.all(AppSpacing.paddingXXLarge),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ModeToggleWidget(
-            currentMode: state.castingMode,
-            onModeChanged: onModeChanged,
-          ),
+          const ModeToggleWidget(),
           const SizedBox(height: AppSpacing.paddingXLarge),
-          _isAudioMode
-              ? const AudioPreviewWidget()
-              : const VideoPreviewWidget(),
+          isAudioMode ? const AudioPreviewWidget() : const VideoPreviewWidget(),
           const SizedBox(height: AppSpacing.paddingXLarge),
-          PlaybackControlsWidget(
-            state: state,
-            onPlayPause: onPlayPause,
-            onSkipPrevious: onSkipPrevious,
-            onSkipNext: onSkipNext,
-            onProgressChanged: onProgressChanged,
-          ),
+          const PlaybackControlsWidget(),
           const SizedBox(height: AppSpacing.paddingXLarge),
-          _MediaInfo(isAudioMode: _isAudioMode),
-          if (_hasSelectedDevice) ...[
+          _MediaInfo(isAudioMode: isAudioMode),
+          if (hasSelectedDevice && state.selectedDeviceName != null) ...[
             const SizedBox(height: AppSpacing.paddingXLarge),
-            _CastingStatus(deviceName: _getDeviceName(state.selectedDevice)),
+            _CastingStatus(deviceName: state.selectedDeviceName!),
           ],
         ],
       ),
@@ -152,4 +120,3 @@ class _CastingStatus extends StatelessWidget {
     );
   }
 }
-
