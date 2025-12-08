@@ -23,6 +23,12 @@ class DeviceSelectorWidget extends StatelessWidget {
     final controller = CastingControllerScope.of(context);
     final isConnected = state.selectedDeviceId != null;
 
+    final connectedDevice = state.devices
+        .where((d) => d.id == state.selectedDeviceId)
+        .firstOrNull;
+    final showDisconnect =
+        isConnected && connectedDevice?.type != DeviceType.airplay;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.bgDarkSecondary,
@@ -68,8 +74,7 @@ class DeviceSelectorWidget extends StatelessWidget {
               },
             ),
 
-            // Disconnect button (when connected)
-            if (isConnected) ...[
+            if (showDisconnect) ...[
               const SizedBox(height: AppSpacing.paddingMedium),
               const _SectionDivider(),
               const SizedBox(height: AppSpacing.paddingMedium),
