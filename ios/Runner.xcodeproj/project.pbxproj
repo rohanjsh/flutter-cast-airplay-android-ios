@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		1A9A73C3903BFE808CEDD4F9 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 39007A42BF215636092FD199 /* Pods_Runner.framework */; };
+		1B1C2F282ED9B32F0032EDB9 /* AirPlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1C2F252ED9B32F0032EDB9 /* AirPlayManager.swift */; };
+		1B1C2F292ED9B32F0032EDB9 /* CastingPlaybackProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1C2F262ED9B32F0032EDB9 /* CastingPlaybackProvider.swift */; };
+		1B1C2F2A2ED9B32F0032EDB9 /* ChromecastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1C2F272ED9B32F0032EDB9 /* ChromecastManager.swift */; };
 		1BCB3F152ED85A130067F953 /* CastingHostApiImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCB3F132ED85A120067F953 /* CastingHostApiImpl.swift */; };
 		1BCB3F162ED85A130067F953 /* CastingApi.g.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCB3F122ED85A120067F953 /* CastingApi.g.swift */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
@@ -47,6 +50,9 @@
 		09466136AE520ABA1CD1280F /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		1B1C2F252ED9B32F0032EDB9 /* AirPlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPlayManager.swift; sourceTree = "<group>"; };
+		1B1C2F262ED9B32F0032EDB9 /* CastingPlaybackProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastingPlaybackProvider.swift; sourceTree = "<group>"; };
+		1B1C2F272ED9B32F0032EDB9 /* ChromecastManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromecastManager.swift; sourceTree = "<group>"; };
 		1BCB3F122ED85A120067F953 /* CastingApi.g.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastingApi.g.swift; sourceTree = "<group>"; };
 		1BCB3F132ED85A120067F953 /* CastingHostApiImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastingHostApiImpl.swift; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -88,6 +94,9 @@
 		1BCB3F142ED85A120067F953 /* Casting */ = {
 			isa = PBXGroup;
 			children = (
+				1B1C2F252ED9B32F0032EDB9 /* AirPlayManager.swift */,
+				1B1C2F262ED9B32F0032EDB9 /* CastingPlaybackProvider.swift */,
+				1B1C2F272ED9B32F0032EDB9 /* ChromecastManager.swift */,
 				1BCB3F122ED85A120067F953 /* CastingApi.g.swift */,
 				1BCB3F132ED85A120067F953 /* CastingHostApiImpl.swift */,
 			);
@@ -319,9 +328,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -359,6 +372,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+				1B1C2F282ED9B32F0032EDB9 /* AirPlayManager.swift in Sources */,
+				1B1C2F292ED9B32F0032EDB9 /* CastingPlaybackProvider.swift in Sources */,
+				1B1C2F2A2ED9B32F0032EDB9 /* ChromecastManager.swift in Sources */,
 				1BCB3F152ED85A130067F953 /* CastingHostApiImpl.swift in Sources */,
 				1BCB3F162ED85A130067F953 /* CastingApi.g.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
@@ -454,6 +470,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 8D5Y6FBA43;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -633,6 +650,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 8D5Y6FBA43;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -655,6 +673,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = 8D5Y6FBA43;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
