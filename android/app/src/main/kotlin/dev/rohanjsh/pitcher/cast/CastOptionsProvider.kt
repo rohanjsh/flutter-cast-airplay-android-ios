@@ -1,4 +1,4 @@
-package dev.rohanjsh.pitcher.casting
+package dev.rohanjsh.pitcher.cast
 
 import android.content.Context
 import com.google.android.gms.cast.CastMediaControlIntent

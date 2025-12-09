@@ -1,4 +1,4 @@
-import 'casting_api.g.dart';
+import 'package:pitcher/src/cast/cast_service.dart';
 
 abstract final class SampleMedia {
   static final MediaInfo bigBuckBunny = MediaInfo(

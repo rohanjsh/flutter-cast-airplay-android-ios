@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:pitcher/src/core/constants/strings.dart';
 
 import 'package:pitcher/src/core/theme/theme.dart';
-import 'package:pitcher/src/presentation/logic/casting_controller.dart';
-import 'package:pitcher/src/presentation/logic/casting_controller_scope.dart';
-import 'package:pitcher/src/presentation/logic/casting_controller_state.dart';
+import 'package:pitcher/src/presentation/logic/cast_controller.dart';
+import 'package:pitcher/src/presentation/logic/cast_controller_scope.dart';
 
 part 'widgets.dart';
 
@@ -18,11 +17,11 @@ class MediaPlayerPage extends StatefulWidget {
 }
 
 class _MediaPlayerPageState extends State<MediaPlayerPage> {
-  late final CastingController _controller;
+  late final CastController _controller;
 
   @override
   Widget build(BuildContext context) {
-    return CastingControllerScope(
+    return CastControllerScope(
       controller: _controller,
       child: Scaffold(
         body: Stack(
@@ -38,7 +37,7 @@ class _MediaPlayerPageState extends State<MediaPlayerPage> {
   @override
   void initState() {
     super.initState();
-    _controller = CastingController(onError: _showError);
+    _controller = CastController(onError: _showError);
   }
 
   @override

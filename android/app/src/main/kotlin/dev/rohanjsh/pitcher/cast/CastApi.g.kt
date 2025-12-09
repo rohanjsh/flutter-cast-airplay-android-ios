@@ -2,7 +2,7 @@
 // See also: https://pub.dev/packages/pigeon
 @file:Suppress("UNCHECKED_CAST", "ArrayInDataClass")
 
-package dev.rohanjsh.pitcher.casting
+package dev.rohanjsh.pitcher.cast
 
 import android.util.Log
 import io.flutter.plugin.common.BasicMessageChannel
@@ -13,17 +13,17 @@ import io.flutter.plugin.common.StandardMethodCodec
 import io.flutter.plugin.common.StandardMessageCodec
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
-private object CastingApiPigeonUtils {
+private object CastApiPigeonUtils {
 
-  fun createConnectionError(channelName: String): CastingApiError {
-    return CastingApiError("channel-error",  "Unable to establish connection on channel: '$channelName'.", "")  }
+  fun createConnectionError(channelName: String): CastApiError {
+    return CastApiError("channel-error",  "Unable to establish connection on channel: '$channelName'.", "")  }
 
   fun wrapResult(result: Any?): List<Any?> {
     return listOf(result)
   }
 
   fun wrapError(exception: Throwable): List<Any?> {
-    return if (exception is CastingApiError) {
+    return if (exception is CastApiError) {
       listOf(
         exception.code,
         exception.message,
@@ -75,84 +75,52 @@ private object CastingApiPigeonUtils {
  * @property message The error message.
  * @property details The error details. Must be a datatype supported by the api codec.
  */
-class CastingApiError (
+class CastApiError (
   val code: String,
   override val message: String? = null,
   val details: Any? = null
 ) : Throwable()
 
-/**
- * The casting technology/provider type.
- *
- * This enum allows the Flutter layer to understand which technology is being
- * used, while keeping the API unified. The native layer handles the specifics.
- */
-enum class CastingProvider(val raw: Int) {
-  /**
-   * Google Cast (Chromecast, Android TV, Nest devices)
-   * Available on: Android, iOS
-   */
+enum class CastProvider(val raw: Int) {
   CHROMECAST(0),
-  /**
-   * Apple AirPlay (Apple TV, AirPlay 2 speakers, AirPlay-enabled TVs)
-   * Available on: iOS only
-   */
   AIRPLAY(1);
 
   companion object {
-    fun ofRaw(raw: Int): CastingProvider? {
+    fun ofRaw(raw: Int): CastProvider? {
       return values().firstOrNull { it.raw == raw }
     }
   }
 }
 
-/**
- * The current state of the casting connection.
- *
- * Modeled after session states from Google Cast SDK.
- */
-enum class CastingConnectionState(val raw: Int) {
-  /** No casting session, not connected to any device */
+enum class CastConnectionState(val raw: Int) {
   DISCONNECTED(0),
-  /** Attempting to connect to a cast device */
   CONNECTING(1),
-  /** Connected to a cast device, ready to load media */
   CONNECTED(2);
 
   companion object {
-    fun ofRaw(raw: Int): CastingConnectionState? {
+    fun ofRaw(raw: Int): CastConnectionState? {
       return values().firstOrNull { it.raw == raw }
     }
   }
 }
 
-/** The current playback state on the remote device. */
-enum class CastingPlaybackState(val raw: Int) {
-  /** No media loaded */
+enum class CastPlaybackState(val raw: Int) {
   IDLE(0),
-  /** Media is loading/buffering */
   LOADING(1),
-  /** Media is playing */
   PLAYING(2),
-  /** Media is paused */
   PAUSED(3),
-  /** Playback has ended */
   ENDED(4),
-  /** An error occurred during playback */
   ERROR(5);
 
   companion object {
-    fun ofRaw(raw: Int): CastingPlaybackState? {
+    fun ofRaw(raw: Int): CastPlaybackState? {
       return values().firstOrNull { it.raw == raw }
     }
   }
 }
 
-/** Media content type for proper receiver handling. */
 enum class MediaType(val raw: Int) {
-  /** Video content (movies, TV shows, video clips) */
   VIDEO(0),
-  /** Audio content (music, podcasts, audiobooks) */
   AUDIO(1);
 
   companion object {
@@ -162,26 +130,11 @@ enum class MediaType(val raw: Int) {
   }
 }
 
-/**
- * Represents a discovered cast-capable device.
- *
- * This is a unified representation that works for both Chromecast and AirPlay
- * devices. The [provider] field indicates which technology is being used.
- *
- * Generated class from Pigeon that represents data sent in messages.
- */
+/** Generated class from Pigeon that represents data sent in messages. */
 data class CastDevice (
-  /**
-   * Unique identifier for the device.
-   * - Chromecast: Route ID from MediaRouter
-   * - AirPlay: UID from AVRouteDetector
-   */
   val id: String,
-  /** Human-readable device name (e.g., "Living Room TV") */
   val name: String,
-  /** The casting technology this device uses */
-  val provider: CastingProvider,
-  /** Device model name if available (e.g., "Chromecast Ultra", "Apple TV 4K") */
+  val provider: CastProvider,
   val modelName: String? = null
 )
  {
@@ -189,7 +142,7 @@ data class CastDevice (
     fun fromList(pigeonVar_list: List<Any?>): CastDevice {
       val id = pigeonVar_list[0] as String
       val name = pigeonVar_list[1] as String
-      val provider = pigeonVar_list[2] as CastingProvider
+      val provider = pigeonVar_list[2] as CastProvider
       val modelName = pigeonVar_list[3] as String?
       return CastDevice(id, name, provider, modelName)
     }
@@ -209,39 +162,19 @@ data class CastDevice (
     if (this === other) {
       return true
     }
-    return CastingApiPigeonUtils.deepEquals(toList(), other.toList())  }
+    return CastApiPigeonUtils.deepEquals(toList(), other.toList())  }
 
   override fun hashCode(): Int = toList().hashCode()
 }
 
-/**
- * Information about the media to be cast.
- *
- * Modeled after MediaInfo from Google Cast SDK.
- * @see https://developers.google.com/cast/docs/reference/android/com/google/android/gms/cast/MediaInfo
- *
- * Generated class from Pigeon that represents data sent in messages.
- */
+/** Generated class from Pigeon that represents data sent in messages. */
 data class MediaInfo (
-  /**
-   * URL of the media content.
-   * Must be accessible by the receiver device (not localhost).
-   */
   val contentUrl: String,
-  /** Title displayed on the receiver (e.g., "Big Buck Bunny") */
   val title: String,
-  /** Type of media content */
   val mediaType: MediaType,
-  /** Subtitle/artist displayed on the receiver */
   val subtitle: String? = null,
-  /** URL of the thumbnail/poster image */
   val imageUrl: String? = null,
-  /**
-   * MIME type of the content (e.g., "video/mp4", "audio/mpeg")
-   * If not provided, the receiver will try to detect it.
-   */
   val contentType: String? = null,
-  /** Duration in milliseconds (optional, receiver can detect) */
   val duration: Long? = null
 )
  {
@@ -275,45 +208,32 @@ data class MediaInfo (
     if (this === other) {
       return true
     }
-    return CastingApiPigeonUtils.deepEquals(toList(), other.toList())  }
+    return CastApiPigeonUtils.deepEquals(toList(), other.toList())  }
 
   override fun hashCode(): Int = toList().hashCode()
 }
 
-/**
- * Current state of the casting session and playback.
- *
- * Sent from native to Flutter via CastingFlutterApi.onStateChanged
- *
- * Generated class from Pigeon that represents data sent in messages.
- */
-data class CastingState (
-  /** Current connection state */
-  val connectionState: CastingConnectionState,
-  /** Current playback state */
-  val playbackState: CastingPlaybackState,
-  /** Currently connected device (null if disconnected) */
+/** Generated class from Pigeon that represents data sent in messages. */
+data class CastSessionState (
+  val connectionState: CastConnectionState,
+  val playbackState: CastPlaybackState,
   val connectedDevice: CastDevice? = null,
-  /** Currently loaded media (null if no media loaded) */
   val currentMedia: MediaInfo? = null,
-  /** Current playback position in milliseconds */
   val positionMs: Long? = null,
-  /** Total duration in milliseconds */
   val durationMs: Long? = null,
-  /** Error message if playbackState is error */
   val errorMessage: String? = null
 )
  {
   companion object {
-    fun fromList(pigeonVar_list: List<Any?>): CastingState {
-      val connectionState = pigeonVar_list[0] as CastingConnectionState
-      val playbackState = pigeonVar_list[1] as CastingPlaybackState
+    fun fromList(pigeonVar_list: List<Any?>): CastSessionState {
+      val connectionState = pigeonVar_list[0] as CastConnectionState
+      val playbackState = pigeonVar_list[1] as CastPlaybackState
       val connectedDevice = pigeonVar_list[2] as CastDevice?
       val currentMedia = pigeonVar_list[3] as MediaInfo?
       val positionMs = pigeonVar_list[4] as Long?
       val durationMs = pigeonVar_list[5] as Long?
       val errorMessage = pigeonVar_list[6] as String?
-      return CastingState(connectionState, playbackState, connectedDevice, currentMedia, positionMs, durationMs, errorMessage)
+      return CastSessionState(connectionState, playbackState, connectedDevice, currentMedia, positionMs, durationMs, errorMessage)
     }
   }
   fun toList(): List<Any?> {
@@ -328,32 +248,32 @@ data class CastingState (
     )
   }
   override fun equals(other: Any?): Boolean {
-    if (other !is CastingState) {
+    if (other !is CastSessionState) {
       return false
     }
     if (this === other) {
       return true
     }
-    return CastingApiPigeonUtils.deepEquals(toList(), other.toList())  }
+    return CastApiPigeonUtils.deepEquals(toList(), other.toList())  }
 
   override fun hashCode(): Int = toList().hashCode()
 }
-private open class CastingApiPigeonCodec : StandardMessageCodec() {
+private open class CastApiPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
       129.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          CastingProvider.ofRaw(it.toInt())
+          CastProvider.ofRaw(it.toInt())
         }
       }
       130.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          CastingConnectionState.ofRaw(it.toInt())
+          CastConnectionState.ofRaw(it.toInt())
         }
       }
       131.toByte() -> {
         return (readValue(buffer) as Long?)?.let {
-          CastingPlaybackState.ofRaw(it.toInt())
+          CastPlaybackState.ofRaw(it.toInt())
         }
       }
       132.toByte() -> {
@@ -373,7 +293,7 @@ private open class CastingApiPigeonCodec : StandardMessageCodec() {
       }
       135.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          CastingState.fromList(it)
+          CastSessionState.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -381,15 +301,15 @@ private open class CastingApiPigeonCodec : StandardMessageCodec() {
   }
   override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
     when (value) {
-      is CastingProvider -> {
+      is CastProvider -> {
         stream.write(129)
         writeValue(stream, value.raw.toLong())
       }
-      is CastingConnectionState -> {
+      is CastConnectionState -> {
         stream.write(130)
         writeValue(stream, value.raw.toLong())
       }
-      is CastingPlaybackState -> {
+      is CastPlaybackState -> {
         stream.write(131)
         writeValue(stream, value.raw.toLong())
       }
@@ -405,7 +325,7 @@ private open class CastingApiPigeonCodec : StandardMessageCodec() {
         stream.write(134)
         writeValue(stream, value.toList())
       }
-      is CastingState -> {
+      is CastSessionState -> {
         stream.write(135)
         writeValue(stream, value.toList())
       }
@@ -414,116 +334,40 @@ private open class CastingApiPigeonCodec : StandardMessageCodec() {
   }
 }
 
-/**
- * API for Flutter to call native platform code.
- *
- * This is the main interface for controlling casting from Dart.
- * Implementations exist for:
- * - Android: Chromecast via Cast SDK + MediaRouter
- * - iOS: Chromecast via Cast SDK + AirPlay via AVFoundation
- *
- * Generated interface from Pigeon that represents a handler of messages from Flutter.
- */
-interface CastingHostApi {
-  /**
-   * Start discovering all available cast devices.
-   *
-   * On Android: Discovers Chromecast devices via MediaRouter.
-   * On iOS: Discovers Chromecast (GCKDiscoveryManager) + AirPlay (AVRouteDetector).
-   *
-   * Results are delivered via [CastingFlutterApi.onDevicesChanged].
-   */
+/** Generated interface from Pigeon that represents a handler of messages from Flutter. */
+interface CastHostApi {
   fun startDiscovery()
-  /** Stop all device discovery. */
   fun stopDiscovery()
-  /** Get all currently discovered devices. */
   fun getDiscoveredDevices(): List<CastDevice>
-  /**
-   * Connect to a specific Chromecast device.
-   *
-   * ⚠️ IMPORTANT: This method only works for Chromecast devices!
-   *
-   * For AirPlay devices, use [showAirPlayPicker] instead - Apple requires
-   * user interaction via their system UI (AVRoutePickerView).
-   *
-   * @param deviceId The unique ID of the Chromecast device to connect to.
-   *
-   * Connection state changes are delivered via CastingFlutterApi.onStateChanged.
-   */
   fun connect(deviceId: String)
-  /**
-   * Disconnect from the current cast device.
-   *
-   * This will stop any playing media and end the casting session.
-   * Works for both Chromecast and AirPlay.
-   */
   fun disconnect()
-  /**
-   * Show the native AirPlay device picker (iOS only).
-   *
-   * This presents a system UI (AVRoutePickerView) where the user can select
-   * an AirPlay device. Apple does not allow programmatic device selection.
-   *
-   * On Android: This is a no-op (AirPlay not available).
-   *
-   * After the user selects a device, the connection state will be updated
-   * via CastingFlutterApi.onStateChanged.
-   */
   fun showAirPlayPicker()
-  /**
-   * Load and start playing media on the connected device.
-   *
-   * @param mediaInfo Information about the media to play.
-   * @param autoplay Whether to start playing immediately (default: true).
-   * @param positionMs Starting position in milliseconds (default: 0).
-   *
-   * For Chromecast: Uses RemoteMediaClient.load()
-   * For AirPlay: Configures AVPlayer with the URL
-   */
   fun loadMedia(mediaInfo: MediaInfo, autoplay: Boolean, positionMs: Long)
-  /** Resume playback of paused media. */
   fun play()
-  /** Pause playback. */
   fun pause()
-  /**
-   * Seek to a specific position.
-   *
-   * @param positionMs Target position in milliseconds.
-   */
   fun seek(positionMs: Long)
-  /**
-   * Stop playback and unload media.
-   *
-   * This does NOT disconnect from the device.
-   */
   fun stop()
-  /**
-   * Set the playback volume on the receiver.
-   *
-   * @param volume Volume level from 0.0 to 1.0.
-   */
   fun setVolume(volume: Double)
-  /** Set mute state on the receiver. */
   fun setMuted(muted: Boolean)
 
   companion object {
-    /** The codec used by CastingHostApi. */
+    /** The codec used by CastHostApi. */
     val codec: MessageCodec<Any?> by lazy {
-      CastingApiPigeonCodec()
+      CastApiPigeonCodec()
     }
-    /** Sets up an instance of `CastingHostApi` to handle messages through the `binaryMessenger`. */
+    /** Sets up an instance of `CastHostApi` to handle messages through the `binaryMessenger`. */
     @JvmOverloads
-    fun setUp(binaryMessenger: BinaryMessenger, api: CastingHostApi?, messageChannelSuffix: String = "") {
+    fun setUp(binaryMessenger: BinaryMessenger, api: CastHostApi?, messageChannelSuffix: String = "") {
       val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.startDiscovery$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.startDiscovery$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.startDiscovery()
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -532,14 +376,14 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.stopDiscovery$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.stopDiscovery$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.stopDiscovery()
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -548,13 +392,13 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.getDiscoveredDevices$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.getDiscoveredDevices$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               listOf(api.getDiscoveredDevices())
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -563,7 +407,7 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.connect$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.connect$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -572,7 +416,7 @@ interface CastingHostApi {
               api.connect(deviceIdArg)
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -581,14 +425,14 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.disconnect$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.disconnect$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.disconnect()
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -597,14 +441,14 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.showAirPlayPicker$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.showAirPlayPicker$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.showAirPlayPicker()
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -613,7 +457,7 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.loadMedia$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.loadMedia$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -624,7 +468,7 @@ interface CastingHostApi {
               api.loadMedia(mediaInfoArg, autoplayArg, positionMsArg)
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -633,14 +477,14 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.play$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.play$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.play()
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -649,14 +493,14 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.pause$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.pause$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.pause()
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -665,7 +509,7 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.seek$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.seek$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -674,7 +518,7 @@ interface CastingHostApi {
               api.seek(positionMsArg)
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -683,14 +527,14 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.stop$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.stop$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
               api.stop()
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -699,7 +543,7 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.setVolume$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.setVolume$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -708,7 +552,7 @@ interface CastingHostApi {
               api.setVolume(volumeArg)
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -717,7 +561,7 @@ interface CastingHostApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastingHostApi.setMuted$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.pitcher.CastHostApi.setMuted$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -726,7 +570,7 @@ interface CastingHostApi {
               api.setMuted(mutedArg)
               listOf(null)
             } catch (exception: Throwable) {
-              CastingApiPigeonUtils.wrapError(exception)
+              CastApiPigeonUtils.wrapError(exception)
             }
             reply.reply(wrapped)
           }
@@ -737,69 +581,45 @@ interface CastingHostApi {
     }
   }
 }
-/**
- * API for native platform code to call Flutter.
- *
- * This enables the native layer to push updates to the Dart layer,
- * following an event-driven architecture pattern.
- *
- * Generated class from Pigeon that represents Flutter messages that can be called from Kotlin.
- */
-class CastingFlutterApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+/** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
+class CastFlutterApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
   companion object {
-    /** The codec used by CastingFlutterApi. */
+    /** The codec used by CastFlutterApi. */
     val codec: MessageCodec<Any?> by lazy {
-      CastingApiPigeonCodec()
+      CastApiPigeonCodec()
     }
   }
-  /**
-   * Called when the list of discovered devices changes.
-   *
-   * This is triggered when:
-   * - A new device is discovered
-   * - A device disappears (goes offline)
-   * - Device properties change
-   */
   fun onDevicesChanged(devicesArg: List<CastDevice>, callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.pitcher.CastingFlutterApi.onDevicesChanged$separatedMessageChannelSuffix"
+    val channelName = "dev.flutter.pigeon.pitcher.CastFlutterApi.onDevicesChanged$separatedMessageChannelSuffix"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
     channel.send(listOf(devicesArg)) {
       if (it is List<*>) {
         if (it.size > 1) {
-          callback(Result.failure(CastingApiError(it[0] as String, it[1] as String, it[2] as String?)))
+          callback(Result.failure(CastApiError(it[0] as String, it[1] as String, it[2] as String?)))
         } else {
           callback(Result.success(Unit))
         }
       } else {
-        callback(Result.failure(CastingApiPigeonUtils.createConnectionError(channelName)))
+        callback(Result.failure(CastApiPigeonUtils.createConnectionError(channelName)))
       } 
     }
   }
-  /**
-   * Called when the casting state changes.
-   *
-   * This includes:
-   * - Connection state changes (connecting, connected, disconnected)
-   * - Playback state changes (loading, playing, paused, ended)
-   * - Position updates during playback
-   * - Error events
-   */
-  fun onStateChanged(stateArg: CastingState, callback: (Result<Unit>) -> Unit)
+  fun onStateChanged(stateArg: CastSessionState, callback: (Result<Unit>) -> Unit)
 {
     val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
-    val channelName = "dev.flutter.pigeon.pitcher.CastingFlutterApi.onStateChanged$separatedMessageChannelSuffix"
+    val channelName = "dev.flutter.pigeon.pitcher.CastFlutterApi.onStateChanged$separatedMessageChannelSuffix"
     val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
     channel.send(listOf(stateArg)) {
       if (it is List<*>) {
         if (it.size > 1) {
-          callback(Result.failure(CastingApiError(it[0] as String, it[1] as String, it[2] as String?)))
+          callback(Result.failure(CastApiError(it[0] as String, it[1] as String, it[2] as String?)))
         } else {
           callback(Result.success(Unit))
         }
       } else {
-        callback(Result.failure(CastingApiPigeonUtils.createConnectionError(channelName)))
+        callback(Result.failure(CastApiPigeonUtils.createConnectionError(channelName)))
       } 
     }
   }

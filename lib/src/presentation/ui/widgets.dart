@@ -13,7 +13,7 @@ class _CastScreenHeader extends StatelessWidget {
   const _CastScreenHeader();
 
   Future<void> _showDeviceSelector(BuildContext context) async {
-    final controller = CastingControllerScope.of(context);
+    final controller = CastControllerScope.of(context);
     await controller.startDiscovery();
 
     if (!context.mounted) return;
@@ -21,7 +21,7 @@ class _CastScreenHeader extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => CastingControllerScope(
+      builder: (_) => CastControllerScope(
         controller: controller,
         child: const _DeviceSelectionSheet(),
       ),
@@ -30,8 +30,9 @@ class _CastScreenHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = CastingControllerScope.stateOf(context);
+    final state = CastControllerScope.stateOf(context);
     final theme = context.appTheme;
+    final isConnected = state is ConnectedState || state is ConnectingState;
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -44,7 +45,7 @@ class _CastScreenHeader extends StatelessWidget {
           const _CastHeaderTitle(),
           _CastConnectionButton(
             onTap: () => _showDeviceSelector(context),
-            isSelected: state.isConnected,
+            isSelected: isConnected,
           ),
         ],
       ),
@@ -90,16 +91,18 @@ class _DeviceSelectionSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = CastingControllerScope.stateOf(context);
-    final controller = CastingControllerScope.of(context);
+    final state = CastControllerScope.stateOf(context);
+    final controller = CastControllerScope.of(context);
     final theme = context.appTheme;
-    final isConnected = state.selectedDeviceId != null;
 
-    final connectedDevice = state.devices
-        .where((d) => d.id == state.selectedDeviceId)
-        .firstOrNull;
+    final connectedDevice = switch (state) {
+      ConnectedState(:final device) => device,
+      ConnectingState(:final device) => device,
+      DisconnectedState() => null,
+    };
+    final isConnected = connectedDevice != null;
     final showDisconnect =
-        isConnected && connectedDevice?.type != DeviceType.airplay;
+        isConnected && connectedDevice.provider != CastProvider.airplay;
 
     return Container(
       decoration: BoxDecoration(
@@ -163,15 +166,22 @@ class _AvailableDeviceList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = CastingControllerScope.stateOf(context);
-    final controller = CastingControllerScope.of(context);
+    final state = CastControllerScope.stateOf(context);
+    final controller = CastControllerScope.of(context);
+    final isDiscovering = controller.isDiscovering;
+
+    final connectedDeviceId = switch (state) {
+      ConnectedState(:final device) => device.id,
+      ConnectingState(:final device) => device.id,
+      DisconnectedState() => null,
+    };
 
     final chromecastDevices = state.devices
-        .where((d) => d.type != DeviceType.airplay)
+        .where((d) => d.provider != CastProvider.airplay)
         .toList();
 
     // Show scanning indicator
-    if (state.isDiscovering && chromecastDevices.isEmpty) {
+    if (isDiscovering && chromecastDevices.isEmpty) {
       return const _DeviceScanningLoader();
     }
 
@@ -183,14 +193,14 @@ class _AvailableDeviceList extends StatelessWidget {
     // Show device list
     return Column(
       children: [
-        if (state.isDiscovering) const _DeviceScanningLoader(),
+        if (isDiscovering) const _DeviceScanningLoader(),
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: chromecastDevices.length,
           itemBuilder: (context, index) => _DeviceListTile(
             device: chromecastDevices[index],
-            isSelected: state.selectedDeviceId == chromecastDevices[index].id,
+            isSelected: connectedDeviceId == chromecastDevices[index].id,
             onTap: () => controller.connect(chromecastDevices[index].id),
           ),
         ),
@@ -204,10 +214,9 @@ class _CastModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = CastingControllerScope.stateOf(context);
-    final controller = CastingControllerScope.of(context);
+    final controller = CastControllerScope.watch(context);
     final theme = context.appTheme;
-    final currentMode = state.castingMode;
+    final currentMode = controller.castMode;
 
     return Container(
       decoration: BoxDecoration(
@@ -224,8 +233,8 @@ class _CastModeSelector extends StatelessWidget {
             child: _ModeSelectionButton(
               icon: Icons.music_note,
               label: Strings.audioMode,
-              isSelected: currentMode == CastingMode.audio,
-              onTap: () => controller.setCastingMode(CastingMode.audio),
+              isSelected: currentMode == CastMode.audio,
+              onTap: () => controller.setCastMode(CastMode.audio),
             ),
           ),
           SizedBox(width: theme.paddingXSmall),
@@ -233,8 +242,8 @@ class _CastModeSelector extends StatelessWidget {
             child: _ModeSelectionButton(
               icon: Icons.play_circle_filled,
               label: Strings.videoMode,
-              isSelected: currentMode == CastingMode.video,
-              onTap: () => controller.setCastingMode(CastingMode.video),
+              isSelected: currentMode == CastMode.video,
+              onTap: () => controller.setCastMode(CastMode.video),
             ),
           ),
         ],
@@ -248,8 +257,16 @@ class _TransportActionButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = CastingControllerScope.stateOf(context);
-    final controller = CastingControllerScope.of(context);
+    final state = CastControllerScope.stateOf(context);
+    final controller = CastControllerScope.of(context);
+
+    final (isPlaying, isLoading) = switch (state) {
+      ConnectedState(:final playback) => (
+        playback.status == PlaybackStatus.playing,
+        playback.status == PlaybackStatus.loading,
+      ),
+      _ => (false, false),
+    };
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -260,7 +277,8 @@ class _TransportActionButtons extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.paddingLarge),
         _PlayPauseActionButton(
-          isPlaying: state.isPlaying,
+          isPlaying: isPlaying,
+          isLoading: isLoading,
           onTap: controller.togglePlayPause,
         ),
         const SizedBox(width: AppSpacing.paddingLarge),
@@ -270,17 +288,50 @@ class _TransportActionButtons extends StatelessWidget {
   }
 }
 
-class _PlaybackProgressSlider extends StatelessWidget {
-  static const double _progressBarOpacity = 0.8;
-
+class _PlaybackProgressSlider extends StatefulWidget {
   const _PlaybackProgressSlider();
 
   @override
+  State<_PlaybackProgressSlider> createState() =>
+      _PlaybackProgressSliderState();
+}
+
+class _PlaybackProgressSliderState extends State<_PlaybackProgressSlider> {
+  static const double _progressBarOpacity = 0.8;
+
+  // Cache last known values to prevent flicker during seek/updates
+  double _lastProgress = 0.0;
+  int _lastPositionSecs = 0;
+  int _lastDurationSecs = 0;
+
+  @override
   Widget build(BuildContext context) {
-    final state = CastingControllerScope.stateOf(context);
-    final controller = CastingControllerScope.of(context);
+    final state = CastControllerScope.stateOf(context);
+    final controller = CastControllerScope.of(context);
     final theme = context.appTheme;
     final colorScheme = Theme.of(context).colorScheme;
+
+    // Extract current values, falling back to cached values
+    final (progress, positionSecs, durationSecs) = switch (state) {
+      ConnectedState(:final playback) => (
+        playback.progress,
+        playback.position.inSeconds,
+        playback.duration.inSeconds,
+      ),
+      _ => (_lastProgress, _lastPositionSecs, _lastDurationSecs),
+    };
+
+    // Only update cache if we have valid values (duration > 0)
+    if (durationSecs > 0) {
+      _lastProgress = progress;
+      _lastPositionSecs = positionSecs;
+      _lastDurationSecs = durationSecs;
+    }
+
+    // Use cached values if current values appear to be reset
+    final displayProgress = durationSecs > 0 ? progress : _lastProgress;
+    final displayPosition = durationSecs > 0 ? positionSecs : _lastPositionSecs;
+    final displayDuration = durationSecs > 0 ? durationSecs : _lastDurationSecs;
 
     return Column(
       children: [
@@ -290,7 +341,7 @@ class _PlaybackProgressSlider extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(theme.radiusSmall),
             child: LinearProgressIndicator(
-              value: state.progress,
+              value: displayProgress.clamp(0.0, 1.0),
               minHeight: theme.progressBarHeight,
               backgroundColor: Colors.white.withValues(
                 alpha: theme.opacityVeryLow,
@@ -303,8 +354,8 @@ class _PlaybackProgressSlider extends StatelessWidget {
         ),
         SizedBox(height: theme.paddingSmall),
         _PlaybackDurationLabels(
-          currentPosition: state.currentPositionSeconds,
-          totalDuration: state.totalDurationSeconds,
+          currentPosition: displayPosition,
+          totalDuration: displayDuration,
         ),
       ],
     );
@@ -313,7 +364,7 @@ class _PlaybackProgressSlider extends StatelessWidget {
   void _handleProgressDrag(
     BuildContext context,
     DragUpdateDetails details,
-    CastingController controller,
+    CastController controller,
   ) {
     final box = context.findRenderObject() as RenderBox;
     final localPosition = box.globalToLocal(details.globalPosition);
@@ -504,13 +555,13 @@ class _DeviceListTile extends StatelessWidget {
   });
 
   IconData get _icon =>
-      device.type == DeviceType.chromecast ? Icons.cast : Icons.airplay;
+      device.provider == CastProvider.chromecast ? Icons.cast : Icons.airplay;
 
   @override
   Widget build(BuildContext context) {
     final theme = context.appTheme;
     final colorScheme = Theme.of(context).colorScheme;
-    final iconColor = device.isConnected ? colorScheme.primary : Colors.grey;
+    final iconColor = isSelected ? colorScheme.primary : Colors.grey;
 
     return GestureDetector(
       onTap: onTap,
@@ -532,7 +583,12 @@ class _DeviceListTile extends StatelessWidget {
           children: [
             Icon(_icon, color: iconColor),
             SizedBox(width: theme.paddingMedium),
-            Expanded(child: _DeviceTileContent(device: device)),
+            Expanded(
+              child: _DeviceTileContent(
+                device: device,
+                isConnected: isSelected,
+              ),
+            ),
             if (isSelected)
               Icon(Icons.check_circle, color: colorScheme.primary),
           ],
@@ -544,17 +600,16 @@ class _DeviceListTile extends StatelessWidget {
 
 class _DeviceTileContent extends StatelessWidget {
   final CastDevice device;
+  final bool isConnected;
 
-  const _DeviceTileContent({required this.device});
+  const _DeviceTileContent({required this.device, this.isConnected = false});
 
   String get _statusText =>
-      device.isConnected ? Strings.deviceConnected : Strings.deviceAvailable;
+      isConnected ? Strings.deviceConnected : Strings.deviceAvailable;
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = device.isConnected
-        ? AppColors.accentGreen
-        : Colors.grey[500]!;
+    final statusColor = isConnected ? AppColors.accentGreen : Colors.grey[500]!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -801,10 +856,16 @@ class _MediaControlCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = CastingControllerScope.stateOf(context);
+    final state = CastControllerScope.stateOf(context);
+    final controller = CastControllerScope.watch(context);
     final theme = context.appTheme;
-    final isAudioMode = state.castingMode == CastingMode.audio;
-    final hasSelectedDevice = state.selectedDeviceId != null;
+    final isAudioMode = controller.castMode == CastMode.audio;
+
+    final connectedDevice = switch (state) {
+      ConnectedState(:final device) => device,
+      ConnectingState(:final device) => device,
+      DisconnectedState() => null,
+    };
 
     return Container(
       decoration: BoxDecoration(
@@ -827,7 +888,7 @@ class _MediaControlCard extends StatelessWidget {
           const _MediaPlaybackControls(),
           SizedBox(height: theme.paddingXLarge),
           const _MediaMetadataDisplay(),
-          if (hasSelectedDevice && state.selectedDeviceName != null) ...[
+          if (connectedDevice != null) ...[
             SizedBox(height: theme.paddingXLarge),
             const _ActiveSessionIndicator(),
           ],
@@ -842,8 +903,8 @@ class _MediaMetadataDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = CastingControllerScope.stateOf(context);
-    final isAudioMode = state.castingMode == CastingMode.audio;
+    final controller = CastControllerScope.watch(context);
+    final isAudioMode = controller.castMode == CastMode.audio;
 
     final title = isAudioMode ? Strings.audioTitle : Strings.videoTitle;
     final subtitle = isAudioMode ? Strings.audioArtist : Strings.videoChannel;
@@ -875,9 +936,14 @@ class _ActiveSessionIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final state = CastingControllerScope.stateOf(context);
+    final state = CastControllerScope.stateOf(context);
     final theme = context.appTheme;
-    final deviceName = state.selectedDeviceName ?? '';
+
+    final deviceName = switch (state) {
+      ConnectedState(:final device) => device.name,
+      ConnectingState(:final device) => device.name,
+      DisconnectedState() => '',
+    };
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -956,22 +1022,37 @@ class _SkipActionButton extends StatelessWidget {
 
 class _PlayPauseActionButton extends StatelessWidget {
   final bool isPlaying;
+  final bool isLoading;
   final VoidCallback onTap;
 
-  const _PlayPauseActionButton({required this.isPlaying, required this.onTap});
-
-  IconData get _icon => isPlaying ? Icons.pause : Icons.play_arrow;
+  const _PlayPauseActionButton({
+    required this.isPlaying,
+    required this.onTap,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = context.appTheme;
     return GestureDetector(
-      onTap: onTap,
+      onTap: isLoading ? null : onTap,
       child: Container(
         width: theme.playButtonSize,
         height: theme.playButtonSize,
         decoration: theme.playButtonDecoration,
-        child: Icon(_icon, color: Colors.white, size: theme.iconXXLarge),
+        child: isLoading
+            ? Padding(
+                padding: EdgeInsets.all(theme.paddingLarge),
+                child: const CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3,
+                ),
+              )
+            : Icon(
+                isPlaying ? Icons.pause : Icons.play_arrow,
+                color: Colors.white,
+                size: theme.iconXXLarge,
+              ),
       ),
     );
   }
