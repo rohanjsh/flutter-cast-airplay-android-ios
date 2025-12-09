@@ -9,11 +9,13 @@
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		1A9A73C3903BFE808CEDD4F9 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 39007A42BF215636092FD199 /* Pods_Runner.framework */; };
-		1B1C2F282ED9B32F0032EDB9 /* AirPlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1C2F252ED9B32F0032EDB9 /* AirPlayManager.swift */; };
-		1B1C2F292ED9B32F0032EDB9 /* CastingPlaybackProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1C2F262ED9B32F0032EDB9 /* CastingPlaybackProvider.swift */; };
-		1B1C2F2A2ED9B32F0032EDB9 /* ChromecastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B1C2F272ED9B32F0032EDB9 /* ChromecastManager.swift */; };
-		1BCB3F152ED85A130067F953 /* CastingHostApiImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCB3F132ED85A120067F953 /* CastingHostApiImpl.swift */; };
-		1BCB3F162ED85A130067F953 /* CastingApi.g.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BCB3F122ED85A120067F953 /* CastingApi.g.swift */; };
+		1B3634842EE86A5B009637EC /* CastSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B36347F2EE86A5B009637EC /* CastSessionManager.swift */; };
+		1B3634852EE86A5B009637EC /* CastApi.g.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3634812EE86A5B009637EC /* CastApi.g.swift */; };
+		1B3634862EE86A5B009637EC /* GoogleCastProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B36347A2EE86A5B009637EC /* GoogleCastProvider.swift */; };
+		1B3634872EE86A5B009637EC /* CastBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3634822EE86A5B009637EC /* CastBridge.swift */; };
+		1B3634882EE86A5B009637EC /* PositionUpdateTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B36347D2EE86A5B009637EC /* PositionUpdateTimer.swift */; };
+		1B3634892EE86A5B009637EC /* CastProviderContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B36347C2EE86A5B009637EC /* CastProviderContract.swift */; };
+		1B36348A2EE86A5B009637EC /* AirPlayProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B3634782EE86A5B009637EC /* AirPlayProvider.swift */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
@@ -50,11 +52,13 @@
 		09466136AE520ABA1CD1280F /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
-		1B1C2F252ED9B32F0032EDB9 /* AirPlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPlayManager.swift; sourceTree = "<group>"; };
-		1B1C2F262ED9B32F0032EDB9 /* CastingPlaybackProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastingPlaybackProvider.swift; sourceTree = "<group>"; };
-		1B1C2F272ED9B32F0032EDB9 /* ChromecastManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChromecastManager.swift; sourceTree = "<group>"; };
-		1BCB3F122ED85A120067F953 /* CastingApi.g.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastingApi.g.swift; sourceTree = "<group>"; };
-		1BCB3F132ED85A120067F953 /* CastingHostApiImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastingHostApiImpl.swift; sourceTree = "<group>"; };
+		1B3634782EE86A5B009637EC /* AirPlayProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AirPlayProvider.swift; sourceTree = "<group>"; };
+		1B36347A2EE86A5B009637EC /* GoogleCastProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleCastProvider.swift; sourceTree = "<group>"; };
+		1B36347C2EE86A5B009637EC /* CastProviderContract.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastProviderContract.swift; sourceTree = "<group>"; };
+		1B36347D2EE86A5B009637EC /* PositionUpdateTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionUpdateTimer.swift; sourceTree = "<group>"; };
+		1B36347F2EE86A5B009637EC /* CastSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastSessionManager.swift; sourceTree = "<group>"; };
+		1B3634812EE86A5B009637EC /* CastApi.g.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastApi.g.swift; sourceTree = "<group>"; };
+		1B3634822EE86A5B009637EC /* CastBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastBridge.swift; sourceTree = "<group>"; };
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		39007A42BF215636092FD199 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -91,17 +95,51 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		1BCB3F142ED85A120067F953 /* Casting */ = {
+		1B3634792EE86A5B009637EC /* AirPlay */ = {
 			isa = PBXGroup;
 			children = (
-				1B1C2F252ED9B32F0032EDB9 /* AirPlayManager.swift */,
-				1B1C2F262ED9B32F0032EDB9 /* CastingPlaybackProvider.swift */,
-				1B1C2F272ED9B32F0032EDB9 /* ChromecastManager.swift */,
-				1BCB3F122ED85A120067F953 /* CastingApi.g.swift */,
-				1BCB3F132ED85A120067F953 /* CastingHostApiImpl.swift */,
+				1B3634782EE86A5B009637EC /* AirPlayProvider.swift */,
 			);
-			name = Casting;
-			path = Runner/Casting;
+			path = AirPlay;
+			sourceTree = "<group>";
+		};
+		1B36347B2EE86A5B009637EC /* GoogleCast */ = {
+			isa = PBXGroup;
+			children = (
+				1B36347A2EE86A5B009637EC /* GoogleCastProvider.swift */,
+			);
+			path = GoogleCast;
+			sourceTree = "<group>";
+		};
+		1B36347E2EE86A5B009637EC /* Provider */ = {
+			isa = PBXGroup;
+			children = (
+				1B3634792EE86A5B009637EC /* AirPlay */,
+				1B36347B2EE86A5B009637EC /* GoogleCast */,
+				1B36347C2EE86A5B009637EC /* CastProviderContract.swift */,
+				1B36347D2EE86A5B009637EC /* PositionUpdateTimer.swift */,
+			);
+			path = Provider;
+			sourceTree = "<group>";
+		};
+		1B3634802EE86A5B009637EC /* Session */ = {
+			isa = PBXGroup;
+			children = (
+				1B36347F2EE86A5B009637EC /* CastSessionManager.swift */,
+			);
+			path = Session;
+			sourceTree = "<group>";
+		};
+		1B3634832EE86A5B009637EC /* Cast */ = {
+			isa = PBXGroup;
+			children = (
+				1B36347E2EE86A5B009637EC /* Provider */,
+				1B3634802EE86A5B009637EC /* Session */,
+				1B3634812EE86A5B009637EC /* CastApi.g.swift */,
+				1B3634822EE86A5B009637EC /* CastBridge.swift */,
+			);
+			name = Cast;
+			path = Runner/Cast;
 			sourceTree = "<group>";
 		};
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
@@ -126,7 +164,7 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
-				1BCB3F142ED85A120067F953 /* Casting */,
+				1B3634832EE86A5B009637EC /* Cast */,
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
 				97C146EF1CF9000F007C117D /* Products */,
@@ -372,11 +410,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
-				1B1C2F282ED9B32F0032EDB9 /* AirPlayManager.swift in Sources */,
-				1B1C2F292ED9B32F0032EDB9 /* CastingPlaybackProvider.swift in Sources */,
-				1B1C2F2A2ED9B32F0032EDB9 /* ChromecastManager.swift in Sources */,
-				1BCB3F152ED85A130067F953 /* CastingHostApiImpl.swift in Sources */,
-				1BCB3F162ED85A130067F953 /* CastingApi.g.swift in Sources */,
+				1B3634842EE86A5B009637EC /* CastSessionManager.swift in Sources */,
+				1B3634852EE86A5B009637EC /* CastApi.g.swift in Sources */,
+				1B3634862EE86A5B009637EC /* GoogleCastProvider.swift in Sources */,
+				1B3634872EE86A5B009637EC /* CastBridge.swift in Sources */,
+				1B3634882EE86A5B009637EC /* PositionUpdateTimer.swift in Sources */,
+				1B3634892EE86A5B009637EC /* CastProviderContract.swift in Sources */,
+				1B36348A2EE86A5B009637EC /* AirPlayProvider.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

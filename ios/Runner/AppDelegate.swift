@@ -11,7 +11,7 @@ private let kReceiverAppID = kGCKDefaultMediaReceiverApplicationID
 @objc class AppDelegate: FlutterAppDelegate {
 
     /// Holds a reference to prevent deallocation.
-    private var castingHostApi: CastingHostApiImpl?
+    private var castBridge: CastBridge?
 
     override func application(
         _ application: UIApplication,
@@ -30,18 +30,18 @@ private let kReceiverAppID = kGCKDefaultMediaReceiverApplicationID
         GCKLogger.sharedInstance().delegate = self
 
         // ════════════════════════════════════════════════════════════════════════
-        // MARK: Step 2 - Register Pigeon API
+        // MARK: Step 2 - Register Pigeon API (New Architecture)
         // ════════════════════════════════════════════════════════════════════════
 
         let controller = window?.rootViewController as! FlutterViewController
         let binaryMessenger = controller.binaryMessenger
 
-        let flutterApi = CastingFlutterApi(binaryMessenger: binaryMessenger)
-        castingHostApi = CastingHostApiImpl(
+        let flutterApi = CastFlutterApi(binaryMessenger: binaryMessenger)
+        castBridge = CastBridge(
             flutterApi: flutterApi,
             castContext: GCKCastContext.sharedInstance()
         )
-        CastingHostApiSetup.setUp(binaryMessenger: binaryMessenger, api: castingHostApi)
+        CastHostApiSetup.setUp(binaryMessenger: binaryMessenger, api: castBridge)
 
         // ════════════════════════════════════════════════════════════════════════
         // MARK: Step 3 - Register Flutter plugins
@@ -53,7 +53,7 @@ private let kReceiverAppID = kGCKDefaultMediaReceiverApplicationID
     }
 
     override func applicationWillTerminate(_ application: UIApplication) {
-        castingHostApi?.dispose()
+        castBridge?.dispose()
     }
 }
 

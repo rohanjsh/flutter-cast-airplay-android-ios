@@ -3,72 +3,78 @@ import GoogleCast
 import os.log
 
 @MainActor
-final class ChromecastManager: NSObject, CastingPlaybackProvider {
+final class GoogleCastProvider: NSObject, CastProviderContract {
 
-    typealias StateChangeHandler = (ProviderState) -> Void
-    typealias DevicesChangeHandler = ([CastDevice]) -> Void
+    let identifier = CastProviderIdentifiers.googleCast
 
     private let castContext: GCKCastContext
     private let discoveryManager: GCKDiscoveryManager
     private let sessionManager: GCKSessionManager
+    private let positionTimer: PositionUpdateTimer
 
+    private weak var observer: CastProviderObserver?
     private var currentMedia: MediaInfo?
-    private(set) var isConnected = false
-    private(set) var isConnecting = false
-    private var onStateChange: StateChangeHandler?
-    private var onDevicesChange: DevicesChangeHandler?
-    private var positionUpdateTimer: Timer?
 
-    init(castContext: GCKCastContext) {
+    init(
+        castContext: GCKCastContext,
+        positionTimer: PositionUpdateTimer = PositionUpdateTimer()
+    ) {
         self.castContext = castContext
         self.discoveryManager = castContext.discoveryManager
         self.sessionManager = castContext.sessionManager
+        self.positionTimer = positionTimer
         super.init()
 
-        sessionManager.add(self)
+        positionTimer.setTickHandler { [weak self] in
+            self?.notifyCurrentState()
+        }
+
         log("Initialized")
     }
 
-    func setStateChangeHandler(_ handler: @escaping StateChangeHandler) {
-        self.onStateChange = handler
-    }
-
-    func setDevicesChangeHandler(_ handler: @escaping DevicesChangeHandler) {
-        self.onDevicesChange = handler
-    }
+    // MARK: - CastDiscoveryCapable
 
     func startDiscovery() {
+        log("Starting discovery...")
         discoveryManager.add(self)
         discoveryManager.passiveScan = true
         discoveryManager.startDiscovery()
-        log("Discovery started")
-        refreshDevices()
+        sessionManager.add(self)
+        notifyDevicesChanged()
     }
 
     func stopDiscovery() {
+        log("Stopping discovery...")
         discoveryManager.stopDiscovery()
         discoveryManager.remove(self)
-        log("Discovery stopped")
     }
 
     func getDiscoveredDevices() -> [CastDevice] {
         (0..<discoveryManager.deviceCount).map { index in
-            let d = discoveryManager.device(at: index)
-            return CastDevice(id: d.uniqueID, name: d.friendlyName ?? d.uniqueID, provider: .chromecast, modelName: d.modelName)
+            let device = discoveryManager.device(at: index)
+            return CastDevice(
+                id: device.uniqueID,
+                name: device.friendlyName ?? device.uniqueID,
+                provider: .chromecast,
+                modelName: device.modelName
+            )
         }
     }
+
+    // MARK: - CastConnectionCapable
 
     func connect(deviceId: String) {
         guard let device = discoveryManager.device(withUniqueID: deviceId) else {
             log("Device not found: \(deviceId)")
-            notifyState(error: "Device not found: \(deviceId)")
+            notifyState(
+                playbackState: .error,
+                errorMessage: "Device not found: \(deviceId)"
+            )
             return
         }
 
         log("Connecting to: \(device.friendlyName ?? deviceId)")
-        isConnecting = true
         sessionManager.startSession(with: device)
-        notifyState()
     }
 
     func disconnect() {
@@ -78,31 +84,39 @@ final class ChromecastManager: NSObject, CastingPlaybackProvider {
         }
 
         log("Disconnecting...")
-        stopPositionUpdateTimer()
+        positionTimer.stop()
         sessionManager.endSessionAndStopCasting(true)
     }
 
+    // MARK: - CastPlaybackCapable
+
     func loadMedia(_ mediaInfo: MediaInfo, autoplay: Bool, positionMs: Int64) {
-        guard let remoteMediaClient = remoteMediaClient else {
+        guard let client = remoteMediaClient else {
             log("Cannot load media: no active session")
-            notifyState(error: "No active Chromecast session")
+            notifyState(
+                playbackState: .error,
+                errorMessage: "No active Chromecast session"
+            )
             return
         }
 
         guard let castMediaInfo = mediaInfo.toCastMediaInfo() else {
             log("Cannot load media: invalid content URL")
-            notifyState(error: "Invalid media URL: \(mediaInfo.contentUrl)")
+            notifyState(
+                playbackState: .error,
+                errorMessage: "Invalid media URL: \(mediaInfo.contentUrl)"
+            )
             return
         }
 
         log("Loading media: \(mediaInfo.title)")
         currentMedia = mediaInfo
 
-        let mediaLoadOptions = GCKMediaLoadOptions()
-        mediaLoadOptions.autoplay = autoplay
-        mediaLoadOptions.playPosition = TimeInterval(positionMs) / 1000.0
+        let loadOptions = GCKMediaLoadOptions()
+        loadOptions.autoplay = autoplay
+        loadOptions.playPosition = TimeInterval(positionMs) / 1000.0
 
-        remoteMediaClient.loadMedia(castMediaInfo, with: mediaLoadOptions)
+        client.loadMedia(castMediaInfo, with: loadOptions)
     }
 
     func play() {
@@ -115,7 +129,7 @@ final class ChromecastManager: NSObject, CastingPlaybackProvider {
         remoteMediaClient?.pause()
     }
 
-    func seek(to positionMs: Int64) {
+    func seek(positionMs: Int64) {
         log("Seek to \(positionMs)ms")
         let seekOptions = GCKMediaSeekOptions()
         seekOptions.interval = TimeInterval(positionMs) / 1000.0
@@ -128,9 +142,9 @@ final class ChromecastManager: NSObject, CastingPlaybackProvider {
         currentMedia = nil
     }
 
-    func setVolume(_ volume: Float) {
+    func setVolume(_ volume: Double) {
         log("Set volume: \(volume)")
-        remoteMediaClient?.setStreamVolume(volume)
+        remoteMediaClient?.setStreamVolume(Float(volume))
     }
 
     func setMuted(_ muted: Bool) {
@@ -138,123 +152,140 @@ final class ChromecastManager: NSObject, CastingPlaybackProvider {
         remoteMediaClient?.setStreamMuted(muted)
     }
 
-    var connectedDeviceName: String? {
-        sessionManager.currentCastSession?.device.friendlyName
+    // MARK: - CastProviderContract
+
+    func setObserver(_ observer: CastProviderObserver?) {
+        self.observer = observer
     }
 
-    var connectedDeviceId: String? {
-        sessionManager.currentCastSession?.device.uniqueID
+    func dispose() {
+        log("Disposing...")
+        positionTimer.stop()
+        stopDiscovery()
+        sessionManager.remove(self)
+        remoteMediaClient?.remove(self)
+        observer = nil
     }
+
+    // MARK: - Private
 
     private var remoteMediaClient: GCKRemoteMediaClient? {
         sessionManager.currentCastSession?.remoteMediaClient
     }
 
-    private func refreshDevices() {
+    private func notifyState(
+        connectionState: CastConnectionState = .disconnected,
+        playbackState: CastPlaybackState = .idle,
+        connectedDevice: CastDevice? = nil,
+        positionMs: Int64 = 0,
+        durationMs: Int64 = 0,
+        errorMessage: String? = nil
+    ) {
+        let state = SessionSnapshot(
+            connectionState: connectionState,
+            playbackState: playbackState,
+            connectedDevice: connectedDevice,
+            activeProviderId: identifier,
+            positionMs: positionMs,
+            durationMs: durationMs,
+            errorMessage: errorMessage
+        )
+        log("State changed: \(state)")
+        observer?.onProviderStateChanged(self, state: state)
+    }
+
+    private func notifyCurrentState() {
+        guard let client = remoteMediaClient else { return }
+
+        let playbackState = client.mediaStatus?.toPlaybackState() ?? .idle
+        let positionMs = Int64(client.approximateStreamPosition() * 1000)
+        let durationMs: Int64 = {
+            guard let mediaInfo = client.mediaStatus?.mediaInformation else { return 0 }
+            return Int64(mediaInfo.streamDuration * 1000)
+        }()
+
+        notifyState(
+            connectionState: .connected,
+            playbackState: playbackState,
+            connectedDevice: sessionManager.currentCastSession?.toDevice(),
+            positionMs: positionMs.clamped(to: 0...Int64.max),
+            durationMs: durationMs.clamped(to: 0...Int64.max)
+        )
+
+        positionTimer.updateForPlaybackState(isPlaying: playbackState == .playing)
+    }
+
+    private func notifyDevicesChanged() {
         let devices = getDiscoveredDevices()
-        log("Discovered \(devices.count) Chromecast device(s)")
-        onDevicesChange?(devices)
+        log("Discovered \(devices.count) device(s)")
+        observer?.onProviderDevicesChanged(self, devices: devices)
     }
-
-    private func notifyState(error: String? = nil) {
-        let connectionState: CastingConnectionState = isConnected ? .connected : isConnecting ? .connecting : .disconnected
-        let playbackState: CastingPlaybackState = error != nil ? .error : isPlaying ? .playing : currentPositionMs > 0 ? .paused : .idle
-        let device = connectedDeviceId.flatMap { id in connectedDeviceName.map { CastDevice(id: id, name: $0, provider: .chromecast, modelName: nil) } }
-        onStateChange?(ProviderState(connectionState: connectionState, playbackState: playbackState, device: device,
-                                     positionMs: currentPositionMs, durationMs: currentDurationMs, error: error))
-    }
-
-    private var isPlaying: Bool {
-        guard let status = remoteMediaClient?.mediaStatus else { return false }
-        return status.playerState == .playing
-    }
-
-    private var currentPositionMs: Int64 {
-        guard let client = remoteMediaClient else { return 0 }
-        return Int64(client.approximateStreamPosition() * 1000)
-    }
-
-    private var currentDurationMs: Int64 {
-        guard let mediaInfo = remoteMediaClient?.mediaStatus?.mediaInformation else { return 0 }
-        return Int64(mediaInfo.streamDuration * 1000)
-    }
-
-    private func cleanup() {
-        stopPositionUpdateTimer(); sessionManager.remove(self); remoteMediaClient?.remove(self); log("Cleaned up")
-    }
-
-    private func startPositionUpdateTimer() {
-        guard positionUpdateTimer == nil else { return }
-        log("Starting position update timer")
-        positionUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.notifyState() }
-        }
-    }
-
-    private func stopPositionUpdateTimer() { positionUpdateTimer?.invalidate(); positionUpdateTimer = nil }
-
-    private func updatePositionTimerState() { isPlaying ? startPositionUpdateTimer() : stopPositionUpdateTimer() }
 
     private nonisolated func log(_ message: String) {
-        os_log("[ChromecastManager] %{public}@", log: .default, type: .debug, message)
+        os_log("[GoogleCastProvider] %{public}@", log: .default, type: .debug, message)
     }
 }
 
-extension ChromecastManager: GCKDiscoveryManagerListener {
+// MARK: - GCKDiscoveryManagerListener
+
+extension GoogleCastProvider: GCKDiscoveryManagerListener {
 
     nonisolated func didInsert(_ device: GCKDevice, at index: UInt) {
         Task { @MainActor in
-            log("Device added: \(device.friendlyName ?? device.uniqueID)")
-            refreshDevices()
+            log("Route added: \(device.friendlyName ?? device.uniqueID)")
+            notifyDevicesChanged()
         }
     }
 
     nonisolated func didRemove(_ device: GCKDevice, at index: UInt) {
         Task { @MainActor in
-            log("Device removed: \(device.friendlyName ?? device.uniqueID)")
-            refreshDevices()
+            log("Route removed: \(device.friendlyName ?? device.uniqueID)")
+            notifyDevicesChanged()
         }
     }
 
     nonisolated func didUpdate(_ device: GCKDevice, at index: UInt) {
         Task { @MainActor in
-            log("Device updated: \(device.friendlyName ?? device.uniqueID)")
-            refreshDevices()
+            log("Route changed: \(device.friendlyName ?? device.uniqueID)")
+            notifyDevicesChanged()
         }
     }
 }
 
-extension ChromecastManager: GCKSessionManagerListener {
+// MARK: - GCKSessionManagerListener
+
+extension GoogleCastProvider: GCKSessionManagerListener {
 
     nonisolated func sessionManager(_ sessionManager: GCKSessionManager, willStart session: GCKSession) {
         Task { @MainActor in
             log("Session starting...")
-            isConnecting = true
-            isConnected = false
-            notifyState()
+            notifyState(connectionState: .connecting)
         }
     }
 
     nonisolated func sessionManager(_ sessionManager: GCKSessionManager, didStart session: GCKSession) {
         Task { @MainActor in
             log("Session started: \(session.sessionID ?? "unknown")")
-            isConnecting = false
-            isConnected = true
 
             if let castSession = session as? GCKCastSession {
                 castSession.remoteMediaClient?.add(self)
             }
 
-            notifyState()
+            notifyState(
+                connectionState: .connected,
+                connectedDevice: (session as? GCKCastSession)?.toDevice()
+            )
         }
     }
 
     nonisolated func sessionManager(_ sessionManager: GCKSessionManager, didFailToStart session: GCKSession, withError error: Error) {
         Task { @MainActor in
             log("Session start failed: \(error.localizedDescription)")
-            isConnecting = false
-            isConnected = false
-            notifyState(error: "Failed to connect: \(error.localizedDescription)")
+            notifyState(
+                connectionState: .disconnected,
+                playbackState: .error,
+                errorMessage: "Failed to connect: \(error.localizedDescription)"
+            )
         }
     }
 
@@ -276,9 +307,8 @@ extension ChromecastManager: GCKSessionManagerListener {
                 log("Session ended")
             }
 
-            isConnecting = false
-            isConnected = false
             currentMedia = nil
+            positionTimer.stop()
             notifyState()
         }
     }
@@ -286,18 +316,18 @@ extension ChromecastManager: GCKSessionManagerListener {
     nonisolated func sessionManager(_ sessionManager: GCKSessionManager, willResumeCastSession session: GCKCastSession) {
         Task { @MainActor in
             log("Session resuming...")
-            isConnecting = true
-            notifyState()
+            notifyState(connectionState: .connecting)
         }
     }
 
     nonisolated func sessionManager(_ sessionManager: GCKSessionManager, didResumeCastSession session: GCKCastSession) {
         Task { @MainActor in
             log("Session resumed")
-            isConnecting = false
-            isConnected = true
             session.remoteMediaClient?.add(self)
-            notifyState()
+            notifyState(
+                connectionState: .connected,
+                connectedDevice: session.toDevice()
+            )
         }
     }
 
@@ -308,14 +338,47 @@ extension ChromecastManager: GCKSessionManagerListener {
     }
 }
 
-extension ChromecastManager: GCKRemoteMediaClientListener {
+// MARK: - GCKRemoteMediaClientListener
+
+extension GoogleCastProvider: GCKRemoteMediaClientListener {
 
     nonisolated func remoteMediaClient(_ client: GCKRemoteMediaClient, didUpdate mediaStatus: GCKMediaStatus?) {
         Task { @MainActor in
             guard mediaStatus != nil else { return }
             log("Playback status updated")
-            notifyState()
-            updatePositionTimerState()
+            notifyCurrentState()
+        }
+    }
+}
+
+// MARK: - Extensions
+
+private extension GCKCastSession {
+
+    func toDevice() -> CastDevice {
+        CastDevice(
+            id: device.uniqueID,
+            name: device.friendlyName ?? device.uniqueID,
+            provider: .chromecast,
+            modelName: device.modelName
+        )
+    }
+}
+
+private extension GCKMediaStatus {
+
+    func toPlaybackState() -> CastPlaybackState {
+        switch playerState {
+        case .idle:
+            switch idleReason {
+            case .finished: return .ended
+            case .error: return .error
+            default: return .idle
+            }
+        case .buffering: return .loading
+        case .playing: return .playing
+        case .paused: return .paused
+        default: return .idle
         }
     }
 }
@@ -323,9 +386,7 @@ extension ChromecastManager: GCKRemoteMediaClientListener {
 extension MediaInfo {
 
     func toCastMediaInfo() -> GCKMediaInformation? {
-        guard let url = URL(string: contentUrl) else {
-            return nil
-        }
+        guard let url = URL(string: contentUrl) else { return nil }
 
         let metadata = GCKMediaMetadata(metadataType: mediaType == .video ? .movie : .musicTrack)
         metadata.setString(title, forKey: kGCKMetadataKeyTitle)
@@ -351,3 +412,8 @@ extension MediaInfo {
     }
 }
 
+private extension Comparable {
+    func clamped(to range: ClosedRange<Self>) -> Self {
+        min(max(self, range.lowerBound), range.upperBound)
+    }
+}
