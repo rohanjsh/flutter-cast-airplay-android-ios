@@ -73,9 +73,6 @@ final class CastService {
   Future<CastResult<Unit>> disconnect() =>
       _guard(() => _repository.disconnect());
 
-  Future<CastResult<Unit>> showAirPlayPicker() =>
-      _guard(() => _repository.showAirPlayPicker());
-
   Future<CastResult<Unit>> loadMedia(
     MediaInfo mediaInfo, {
     bool autoplay = true,

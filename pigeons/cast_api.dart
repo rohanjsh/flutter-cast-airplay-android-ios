@@ -83,7 +83,6 @@ abstract class CastHostApi {
   List<CastDevice> getDiscoveredDevices();
   void connect(String deviceId);
   void disconnect();
-  void showAirPlayPicker();
   void loadMedia(MediaInfo mediaInfo, bool autoplay, int positionMs);
   void play();
   void pause();

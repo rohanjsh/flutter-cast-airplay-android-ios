@@ -74,13 +74,6 @@ class CastRepository implements CastFlutterApi {
     );
   }
 
-  Future<CastResult<Unit>> showAirPlayPicker() {
-    return tryCatch(
-      () => _hostApi.showAirPlayPicker(),
-      (e) => ConnectionError('Failed to show AirPlay picker', e),
-    );
-  }
-
   Future<CastResult<Unit>> loadMedia(
     MediaInfo mediaInfo, {
     bool autoplay = true,

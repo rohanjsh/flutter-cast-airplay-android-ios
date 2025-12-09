@@ -5,10 +5,6 @@ extension on BuildContext {
       Theme.of(this).extension<AppThemeExtension>()!;
 }
 
-// ============================================================================
-// CONTROLLER-COMMUNICATING WIDGETS (Native Integration)
-// ============================================================================
-
 class _CastScreenHeader extends StatelessWidget {
   const _CastScreenHeader();
 
@@ -71,13 +67,13 @@ class _CastConnectionButton extends StatelessWidget {
         padding: EdgeInsets.all(theme.paddingMedium),
         decoration: BoxDecoration(
           color: isSelected
-              ? colorScheme.primary.withValues(alpha: theme.opacityMedium)
-              : Colors.white.withValues(alpha: theme.opacityVeryLow),
+              ? colorScheme.primary.fade(theme.opacityMedium)
+              : Colors.white.fade(theme.opacityVeryLow),
           borderRadius: BorderRadius.circular(theme.radiusLarge),
           border: Border.all(
             color: isSelected
-                ? colorScheme.primary.withValues(alpha: theme.opacityHigh)
-                : Colors.white.withValues(alpha: theme.opacityVeryLow),
+                ? colorScheme.primary.fade(theme.opacityHigh)
+                : Colors.white.fade(theme.opacityVeryLow),
           ),
         ),
         child: Icon(Icons.cast, color: iconColor, size: theme.iconLarge),
@@ -111,9 +107,7 @@ class _DeviceSelectionSheet extends StatelessWidget {
           top: Radius.circular(theme.radiusXXLarge),
         ),
         border: Border(
-          top: BorderSide(
-            color: Colors.white.withValues(alpha: theme.opacityVeryLow),
-          ),
+          top: BorderSide(color: Colors.white.fade(theme.opacityVeryLow)),
         ),
       ),
       child: Padding(
@@ -127,11 +121,10 @@ class _DeviceSelectionSheet extends StatelessWidget {
             const _SheetTitle(title: Strings.selectDevice),
             SizedBox(height: theme.paddingLarge),
 
-            // AirPlay option (iOS only)
             if (Platform.isIOS) ...[
               _AirPlaySelectionTile(
                 onTap: () {
-                  controller.showAirPlayPicker();
+                  controller.connect('airplay_available');
                   Navigator.pop(context);
                 },
               ),
@@ -140,7 +133,6 @@ class _DeviceSelectionSheet extends StatelessWidget {
               SizedBox(height: theme.paddingSmall),
             ],
 
-            // Chromecast devices or scanning state
             const _AvailableDeviceList(),
 
             if (showDisconnect) ...[
@@ -180,17 +172,14 @@ class _AvailableDeviceList extends StatelessWidget {
         .where((d) => d.provider != CastProvider.airplay)
         .toList();
 
-    // Show scanning indicator
     if (isDiscovering && chromecastDevices.isEmpty) {
       return const _DeviceScanningLoader();
     }
 
-    // Show empty state
     if (chromecastDevices.isEmpty) {
       return const _NoDevicesFoundPlaceholder();
     }
 
-    // Show device list
     return Column(
       children: [
         if (isDiscovering) const _DeviceScanningLoader(),
@@ -220,11 +209,9 @@ class _CastModeSelector extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: theme.opacityMinimal),
+        color: Colors.white.fade(theme.opacityMinimal),
         borderRadius: BorderRadius.circular(theme.radiusLarge),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: theme.opacityVeryLow),
-        ),
+        border: Border.all(color: Colors.white.fade(theme.opacityVeryLow)),
       ),
       padding: EdgeInsets.all(theme.paddingXSmall),
       child: Row(
@@ -299,7 +286,6 @@ class _PlaybackProgressSlider extends StatefulWidget {
 class _PlaybackProgressSliderState extends State<_PlaybackProgressSlider> {
   static const double _progressBarOpacity = 0.8;
 
-  // Cache last known values to prevent flicker during seek/updates
   double _lastProgress = 0.0;
   int _lastPositionSecs = 0;
   int _lastDurationSecs = 0;
@@ -311,7 +297,6 @@ class _PlaybackProgressSliderState extends State<_PlaybackProgressSlider> {
     final theme = context.appTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Extract current values, falling back to cached values
     final (progress, positionSecs, durationSecs) = switch (state) {
       ConnectedState(:final playback) => (
         playback.progress,
@@ -321,14 +306,12 @@ class _PlaybackProgressSliderState extends State<_PlaybackProgressSlider> {
       _ => (_lastProgress, _lastPositionSecs, _lastDurationSecs),
     };
 
-    // Only update cache if we have valid values (duration > 0)
     if (durationSecs > 0) {
       _lastProgress = progress;
       _lastPositionSecs = positionSecs;
       _lastDurationSecs = durationSecs;
     }
 
-    // Use cached values if current values appear to be reset
     final displayProgress = durationSecs > 0 ? progress : _lastProgress;
     final displayPosition = durationSecs > 0 ? positionSecs : _lastPositionSecs;
     final displayDuration = durationSecs > 0 ? durationSecs : _lastDurationSecs;
@@ -347,7 +330,7 @@ class _PlaybackProgressSliderState extends State<_PlaybackProgressSlider> {
                 alpha: theme.opacityVeryLow,
               ),
               valueColor: AlwaysStoppedAnimation(
-                colorScheme.primary.withValues(alpha: _progressBarOpacity),
+                colorScheme.primary.fade(_progressBarOpacity),
               ),
             ),
           ),
@@ -372,10 +355,6 @@ class _PlaybackProgressSliderState extends State<_PlaybackProgressSlider> {
     controller.seekToProgress(newProgress);
   }
 }
-
-// ============================================================================
-// READ-ONLY WIDGETS
-// ============================================================================
 
 class _CastScreenBody extends StatelessWidget {
   const _CastScreenBody();
@@ -441,10 +420,6 @@ class _CastHeaderTitle extends StatelessWidget {
   }
 }
 
-// ============================================================================
-// SHEET COMPONENTS
-// ============================================================================
-
 class _SheetDragHandle extends StatelessWidget {
   static const double _width = 40;
   static const double _height = 4;
@@ -459,7 +434,7 @@ class _SheetDragHandle extends StatelessWidget {
         width: _width,
         height: _height,
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: theme.opacityLow),
+          color: Colors.white.fade(theme.opacityLow),
           borderRadius: BorderRadius.circular(theme.radiusSmall),
         ),
       ),
@@ -484,7 +459,6 @@ class _SheetTitle extends StatelessWidget {
   }
 }
 
-/// Scanning indicator with animation.
 class _DeviceScanningLoader extends StatelessWidget {
   const _DeviceScanningLoader();
 
@@ -503,9 +477,7 @@ class _DeviceScanningLoader extends StatelessWidget {
             height: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation(
-                colorScheme.primary.withValues(alpha: 0.8),
-              ),
+              valueColor: AlwaysStoppedAnimation(colorScheme.primary.fade(0.8)),
             ),
           ),
           SizedBox(width: theme.paddingMedium),
@@ -519,7 +491,6 @@ class _DeviceScanningLoader extends StatelessWidget {
   }
 }
 
-/// Empty state when no devices are found.
 class _NoDevicesFoundPlaceholder extends StatelessWidget {
   const _NoDevicesFoundPlaceholder();
 
@@ -570,13 +541,13 @@ class _DeviceListTile extends StatelessWidget {
         padding: EdgeInsets.all(theme.paddingLarge),
         decoration: BoxDecoration(
           color: isSelected
-              ? colorScheme.primary.withValues(alpha: theme.opacityMedium)
-              : Colors.white.withValues(alpha: theme.opacityMinimal),
+              ? colorScheme.primary.fade(theme.opacityMedium)
+              : Colors.white.fade(theme.opacityMinimal),
           borderRadius: BorderRadius.circular(theme.radiusLarge),
           border: Border.all(
             color: isSelected
-                ? colorScheme.primary.withValues(alpha: theme.opacityHigh)
-                : Colors.white.withValues(alpha: theme.opacityVeryLow),
+                ? colorScheme.primary.fade(theme.opacityHigh)
+                : Colors.white.fade(theme.opacityVeryLow),
           ),
         ),
         child: Row(
@@ -631,17 +602,13 @@ class _DeviceTileContent extends StatelessWidget {
   }
 }
 
-/// Divider between sections.
 class _ListSectionDivider extends StatelessWidget {
   const _ListSectionDivider();
 
   @override
   Widget build(BuildContext context) {
     final theme = context.appTheme;
-    return Container(
-      height: 1,
-      color: Colors.white.withValues(alpha: theme.opacityVeryLow),
-    );
+    return Container(height: 1, color: Colors.white.fade(theme.opacityVeryLow));
   }
 }
 
@@ -658,11 +625,9 @@ class _AirPlaySelectionTile extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(theme.paddingLarge),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: theme.opacityMinimal),
+          color: Colors.white.fade(theme.opacityMinimal),
           borderRadius: BorderRadius.circular(theme.radiusLarge),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: theme.opacityVeryLow),
-          ),
+          border: Border.all(color: Colors.white.fade(theme.opacityVeryLow)),
         ),
         child: Row(
           children: [
@@ -710,9 +675,9 @@ class _DisconnectActionTile extends StatelessWidget {
         width: double.infinity,
         padding: EdgeInsets.all(theme.paddingLarge),
         decoration: BoxDecoration(
-          color: errorColor.withValues(alpha: 0.1),
+          color: errorColor.fade(0.1),
           borderRadius: BorderRadius.circular(theme.radiusMedium),
-          border: Border.all(color: errorColor.withValues(alpha: 0.3)),
+          border: Border.all(color: errorColor.fade(0.3)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -732,10 +697,6 @@ class _DisconnectActionTile extends StatelessWidget {
     );
   }
 }
-
-// ============================================================================
-// MEDIA PREVIEW WIDGETS
-// ============================================================================
 
 class _AudioArtworkPreview extends StatelessWidget {
   const _AudioArtworkPreview();
@@ -760,14 +721,13 @@ class _AudioArtworkPreview extends StatelessWidget {
         child: Icon(
           Icons.music_note,
           size: theme.iconHuge,
-          color: Colors.white.withValues(alpha: theme.opacityMedium),
+          color: Colors.white.fade(theme.opacityMedium),
         ),
       ),
     );
   }
 }
 
-/// Widget displaying video preview with dark gradient overlay.
 class _VideoThumbnailPreview extends StatelessWidget {
   const _VideoThumbnailPreview();
 
@@ -792,8 +752,8 @@ class _VideoThumbnailPreview extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.black.withValues(alpha: theme.opacityMedium),
-              Colors.black.withValues(alpha: 0.7),
+              Colors.black.fade(theme.opacityMedium),
+              Colors.black.fade(0.7),
             ],
           ),
         ),
@@ -871,9 +831,7 @@ class _MediaControlCard extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: theme.cardGradient,
         borderRadius: BorderRadius.circular(theme.radiusXXLarge),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: theme.opacityLow),
-        ),
+        border: Border.all(color: Colors.white.fade(theme.opacityLow)),
       ),
       padding: EdgeInsets.all(theme.paddingXXLarge),
       child: Column(
@@ -951,10 +909,10 @@ class _ActiveSessionIndicator extends StatelessWidget {
         vertical: theme.paddingSmall,
       ),
       decoration: BoxDecoration(
-        color: AppColors.accentGreen.withValues(alpha: theme.opacityLow),
+        color: AppColors.accentGreen.fade(theme.opacityLow),
         borderRadius: BorderRadius.circular(theme.radiusSmall),
         border: Border.all(
-          color: AppColors.accentGreen.withValues(alpha: theme.opacityMedium),
+          color: AppColors.accentGreen.fade(theme.opacityMedium),
         ),
       ),
       child: Row(
@@ -980,10 +938,6 @@ class _ActiveSessionIndicator extends StatelessWidget {
     );
   }
 }
-
-// ============================================================================
-// PLAYBACK CONTROLS
-// ============================================================================
 
 class _MediaPlaybackControls extends StatelessWidget {
   const _MediaPlaybackControls();
