@@ -7,7 +7,6 @@ import 'package:pitcher/src/cast/domain/sample_media.dart';
 
 export 'package:pitcher/src/cast/cast_service.dart';
 
-/// UI-only state for casting mode preference.
 enum CastMode { audio, video }
 
 typedef ErrorCallback = void Function(String message);
@@ -23,17 +22,13 @@ class CastController extends ChangeNotifier {
   StreamSubscription<CastState>? _subscription;
 
   CastMode _castMode = CastMode.video;
-  bool _pendingMediaLoad = false; // Flag to load media when connected
-
-  // ─── Getters (delegate to service) ────────────────────────────────────────
+  bool _pendingMediaLoad = false;
 
   CastState get state => _service.currentState;
   bool get isDiscovering => _service.isDiscovering;
   bool get isConnected => _service.isConnected;
   bool get isPlaying => _service.isPlaying;
   CastMode get castMode => _castMode;
-
-  // ─── Discovery ────────────────────────────────────────────────────────────
 
   Future<void> startDiscovery() async {
     final result = await _service.startDiscovery();
@@ -45,26 +40,12 @@ class CastController extends ChangeNotifier {
 
   Future<void> stopDiscovery() => _service.stopDiscovery();
 
-  // ─── Connection ───────────────────────────────────────────────────────────
-
   Future<void> connect(String deviceId) async {
-    _pendingMediaLoad = true; // Will load media when connected
+    _pendingMediaLoad = true;
     final result = await _service.connect(deviceId);
-    result.fold(
-      (error) {
-        _pendingMediaLoad = false;
-        _handleError('Connection failed: ${error.message}');
-      },
-      (_) {}, // Don't load media here - wait for state change to CONNECTED
-    );
-  }
-
-  Future<void> showAirPlayPicker() async {
-    _pendingMediaLoad = true; // Will load media when connected
-    final result = await _service.showAirPlayPicker();
     result.fold((error) {
       _pendingMediaLoad = false;
-      _handleError('AirPlay failed: ${error.message}');
+      _handleError('Connection failed: ${error.message}');
     }, (_) {});
   }
 
@@ -77,8 +58,6 @@ class CastController extends ChangeNotifier {
     );
   }
 
-  // ─── Playback ─────────────────────────────────────────────────────────────
-
   Future<void> togglePlayPause() async {
     if (_service.isPlaying) {
       await pause();
@@ -90,11 +69,10 @@ class CastController extends ChangeNotifier {
   Future<void> play() async {
     final state = _service.currentState;
 
-    // If connected but no media loaded (idle), load media first
     if (state is ConnectedState &&
         state.playback.status == PlaybackStatus.idle) {
       await _loadSampleMedia();
-      return; // Media load will auto-play
+      return;
     }
 
     await _service.play();
@@ -135,8 +113,6 @@ class CastController extends ChangeNotifier {
     await _service.seek(newPositionMs);
   }
 
-  // ─── Cast Mode ────────────────────────────────────────────────────────────
-
   void setCastMode(CastMode mode) {
     _castMode = mode;
     notifyListeners();
@@ -146,12 +122,9 @@ class CastController extends ChangeNotifier {
     }
   }
 
-  // ─── Private ──────────────────────────────────────────────────────────────
-
   void _onStateChanged(CastState newState) {
     notifyListeners();
 
-    // When connection becomes CONNECTED and we have a pending media load
     if (_pendingMediaLoad && newState is ConnectedState) {
       _pendingMediaLoad = false;
       _loadSampleMedia();

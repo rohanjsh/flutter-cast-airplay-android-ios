@@ -95,17 +95,6 @@ final class CastSessionManager: CastProviderObserver {
         guardActive("setMuted") { $0.setMuted(muted) }
     }
 
-    // MARK: - AirPlay Specific
-
-    func showAirPlayPicker() {
-        guard let airPlayProvider = providers[CastProviderIdentifiers.airPlay] as? AirPlayProvider else {
-            log("AirPlay provider not registered")
-            return
-        }
-        activeProvider = airPlayProvider
-        airPlayProvider.showPicker()
-    }
-
     // MARK: - Observers
 
     func setStateObserver(_ observer: StateObserver?) {

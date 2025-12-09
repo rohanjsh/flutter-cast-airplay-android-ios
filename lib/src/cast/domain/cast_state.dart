@@ -1,7 +1,6 @@
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:fpdart/fpdart.dart';
-
-import '../data/cast_api.g.dart';
+import 'package:pitcher/src/cast/data/cast_api.g.dart';
 
 part 'cast_state.mapper.dart';
 

@@ -20,7 +20,6 @@ class CastBridge(
     override fun getDiscoveredDevices(): List<CastDevice> = sessionManager.getDiscoveredDevices()
     override fun connect(deviceId: String) = sessionManager.connect(deviceId)
     override fun disconnect() = sessionManager.disconnect()
-    override fun showAirPlayPicker() { /* No-op on Android */ }
 
     override fun loadMedia(mediaInfo: MediaInfo, autoplay: Boolean, positionMs: Long) {
         currentMedia = mediaInfo

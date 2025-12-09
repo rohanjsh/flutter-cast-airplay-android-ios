@@ -51,10 +51,6 @@ final class CastBridge: NSObject, CastHostApi {
         sessionManager.disconnect()
     }
 
-    func showAirPlayPicker() throws {
-        sessionManager.showAirPlayPicker()
-    }
-
     func loadMedia(mediaInfo: MediaInfo, autoplay: Bool, positionMs: Int64) throws {
         currentMedia = mediaInfo
         sessionManager.loadMedia(mediaInfo, autoplay: autoplay, positionMs: positionMs)
