@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:pitcher/src/cast/domain/sample_media.dart';
 import 'package:pitcher/src/core/constants/strings.dart';
-
 import 'package:pitcher/src/core/theme/theme.dart';
 import 'package:pitcher/src/presentation/logic/cast_controller.dart';
 import 'package:pitcher/src/presentation/logic/cast_controller_scope.dart';

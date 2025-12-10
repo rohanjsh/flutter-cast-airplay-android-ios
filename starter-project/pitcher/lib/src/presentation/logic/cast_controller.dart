@@ -133,8 +133,8 @@ class CastController extends ChangeNotifier {
 
   Future<void> _loadSampleMedia() async {
     final media = _castMode == CastMode.video
-        ? SampleMedia.bigBuckBunny
-        : SampleMedia.audioSample1;
+        ? SampleMedia.video
+        : SampleMedia.audio;
 
     final result = await _service.loadMedia(media);
     result.fold(
@@ -151,6 +151,7 @@ class CastController extends ChangeNotifier {
   @override
   void dispose() {
     _subscription?.cancel();
+    _service.dispose();
     super.dispose();
   }
 }
