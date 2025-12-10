@@ -1,0 +1,23 @@
+PODS:
+  - Flutter (1.0.0)
+  - google-cast-sdk (4.8.4)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - google-cast-sdk (~> 4.8.4)
+
+SPEC REPOS:
+  trunk:
+    - google-cast-sdk
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  google-cast-sdk: 32f65af50d164e3c475e79ad123db3cc26fbcd37
+
+PODFILE CHECKSUM: aae8954ef8fa509aca8e8f366f02e5f6fb498e8d
+
+COCOAPODS: 1.16.2
