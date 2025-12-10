@@ -705,6 +705,7 @@ class _AudioArtworkPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.appTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final imageUrl = SampleMedia.audio.imageUrl;
 
     return Container(
       width: double.infinity,
@@ -717,12 +718,30 @@ class _AudioArtworkPreview extends StatelessWidget {
           colors: [colorScheme.primary, AppColors.primaryPurple],
         ),
       ),
-      child: Center(
-        child: Icon(
-          Icons.music_note,
-          size: theme.iconHuge,
-          color: Colors.white.fade(theme.opacityMedium),
-        ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(theme.radiusXLarge),
+        child: imageUrl != null
+            ? Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const _AudioPlaceholder(),
+              )
+            : const _AudioPlaceholder(),
+      ),
+    );
+  }
+}
+
+class _AudioPlaceholder extends StatelessWidget {
+  const _AudioPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Icon(
+        Icons.music_note,
+        size: context.appTheme.iconHuge,
+        color: Colors.white.fade(context.appTheme.opacityMedium),
       ),
     );
   }
@@ -734,28 +753,38 @@ class _VideoThumbnailPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.appTheme;
+    final imageUrl = SampleMedia.video.imageUrl;
+
     return Container(
       width: double.infinity,
       height: theme.mediaPreviewHeight,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(theme.radiusXLarge),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppColors.bgDarkTertiary, AppColors.bgDarkQuaternary],
-        ),
       ),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(theme.radiusXLarge),
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black.fade(theme.opacityMedium),
-              Colors.black.fade(0.7),
-            ],
-          ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(theme.radiusXLarge),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (imageUrl != null)
+              Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => const SizedBox.shrink(),
+              ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.fade(theme.opacityLow),
+                    Colors.black.fade(theme.opacityMedium),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -864,14 +893,13 @@ class _MediaMetadataDisplay extends StatelessWidget {
     final controller = CastControllerScope.watch(context);
     final isAudioMode = controller.castMode == CastMode.audio;
 
-    final title = isAudioMode ? Strings.audioTitle : Strings.videoTitle;
-    final subtitle = isAudioMode ? Strings.audioArtist : Strings.videoChannel;
+    final media = isAudioMode ? SampleMedia.audio : SampleMedia.video;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          media.title,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -879,7 +907,7 @@ class _MediaMetadataDisplay extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.paddingSmall),
         Text(
-          subtitle,
+          media.subtitle ?? '',
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: Colors.grey[400]),
