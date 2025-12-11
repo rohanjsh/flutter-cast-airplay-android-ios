@@ -21,7 +21,7 @@ class _CastScreenHeader extends StatelessWidget {
         controller: controller,
         child: const _DeviceSelectionSheet(),
       ),
-    );
+    ).whenComplete(() => controller.stopDiscovery());
   }
 
   @override
