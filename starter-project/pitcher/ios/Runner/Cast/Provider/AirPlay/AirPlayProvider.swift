@@ -15,6 +15,7 @@ final class AirPlayProvider: NSObject, CastProviderContract {
     private var player: AVPlayer?
     private var playerItem: AVPlayerItem?
     private var statusObservation: NSKeyValueObservation?
+    private var timeControlStatusObservation: NSKeyValueObservation?
     private var externalPlaybackObservation: NSKeyValueObservation?
     private var routeChangeObservation: NSObjectProtocol?
 
@@ -121,19 +122,21 @@ final class AirPlayProvider: NSObject, CastProviderContract {
     func play() {
         log("Play")
         player?.play()
-        notifyCurrentState()
     }
 
     func pause() {
         log("Pause")
         player?.pause()
-        notifyCurrentState()
     }
 
     func seek(positionMs: Int64) {
         log("Seek to \(positionMs)ms")
         let time = CMTime(value: positionMs, timescale: 1000)
-        player?.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
+        player?.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+            Task { @MainActor in
+                self?.notifyCurrentState()
+            }
+        }
     }
 
     func stop() {
@@ -228,7 +231,7 @@ final class AirPlayProvider: NSObject, CastProviderContract {
 
     private func notifyCurrentState() {
         let connectionState: CastConnectionState = isConnected ? .connected : .disconnected
-        let playbackState: CastPlaybackState = isPlaying ? .playing : (currentPositionMs > 0 ? .paused : .idle)
+        let playbackState: CastPlaybackState = isPlaying ? .playing : .paused
         let device = connectedRouteName.map {
             CastDevice(
                 id: "airplay_\($0.hashValue)",
@@ -287,6 +290,13 @@ final class AirPlayProvider: NSObject, CastProviderContract {
             }
         }
 
+        // Observe timeControlStatus for play/pause state changes
+        timeControlStatusObservation = player.observe(\.timeControlStatus, options: [.new]) { [weak self] _, _ in
+            Task { @MainActor in
+                self?.notifyCurrentState()
+            }
+        }
+
         externalPlaybackObservation = player.observe(\.isExternalPlaybackActive, options: [.new]) { [weak self] player, _ in
             Task { @MainActor in
                 self?.isConnected = player.isExternalPlaybackActive
@@ -337,6 +347,8 @@ final class AirPlayProvider: NSObject, CastProviderContract {
         positionTimer.stop()
         statusObservation?.invalidate()
         statusObservation = nil
+        timeControlStatusObservation?.invalidate()
+        timeControlStatusObservation = nil
         externalPlaybackObservation?.invalidate()
         externalPlaybackObservation = nil
         player?.pause()

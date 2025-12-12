@@ -129,7 +129,7 @@ abstract final class AppThemeConfig {
       iconHuge: 80,
       playButtonSize: 64,
       mediaPreviewHeight: 160,
-      progressBarHeight: 4,
+      progressBarHeight: 16,
       backgroundGradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
