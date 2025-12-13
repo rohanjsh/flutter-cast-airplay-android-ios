@@ -18,7 +18,7 @@ class MainActivity : FlutterActivity() {
         val binaryMessenger = flutterEngine.dartExecutor.binaryMessenger
 
         // ╔═══════════════════════════════════════════════════════════════════════╗
-        // ║  TODO 5: Complete the Pigeon bridge setup - Android (1 line)          ║
+        // ║  TODO 3: Complete the Pigeon bridge setup - Android (1 line)          ║
         // ╚═══════════════════════════════════════════════════════════════════════╝
         //
         // 👉 ADD: CastHostApi.setUp(binaryMessenger, castBridge)
@@ -55,7 +55,7 @@ class MainActivity : FlutterActivity() {
         //    → Check that castBridge is not null when passed to setUp
         //
         // 3. "Methods work but callbacks don't reach Flutter"
-        //    → This TODO only enables Flutter→Native. Check TODO 1 for Native→Flutter
+        //    → This TODO only enables Flutter→Native. Check TODO 1 for Native→Flutter.
         //
         // ───────────────────────────────────────────────────────────────────────────
         // 🏭 PRODUCTION: Process Death
@@ -74,7 +74,7 @@ class MainActivity : FlutterActivity() {
         }
         castBridge = CastBridge(sessionManager, flutterApi)
 
-        throw NotImplementedError("TODO 5: CastHostApi.setUp(...)")
+        throw NotImplementedError("TODO 3: CastHostApi.setUp(...)")
     }
 
     override fun onDestroy() {

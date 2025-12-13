@@ -266,7 +266,7 @@ final class GoogleCastProvider: NSObject, CastProviderContract {
 
 // MARK: - GCKDiscoveryManagerListener
 // ╔═══════════════════════════════════════════════════════════════════════════╗
-// ║  TODO 8: Notify Flutter when Chromecast devices are discovered (iOS)     ║
+// ║  TODO 6: Notify Flutter when Chromecast devices are discovered (iOS)     ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 //
 // 👉 ADD in didInsert: notifyDevicesChanged()
@@ -300,7 +300,7 @@ final class GoogleCastProvider: NSObject, CastProviderContract {
 // ───────────────────────────────────────────────────────────────────────────────
 // 🔍 DEBUGGING: Why only didInsert?
 // ───────────────────────────────────────────────────────────────────────────────
-// Like Android TODO 6, we only need to add the TODO in didInsert because:
+// Like Android TODO 5, we only need to add the TODO in didInsert because:
 //   • didRemove: Already has notifyDevicesChanged() (device disconnects)
 //   • didUpdate: Already has notifyDevicesChanged() (name updates)
 //   • didInsert: MISSING! This is why new devices don't appear
@@ -314,8 +314,8 @@ extension GoogleCastProvider: GCKDiscoveryManagerListener {
     nonisolated func didInsert(_ device: GCKDevice, at index: UInt) {
         Task { @MainActor in
             log("Route added: \(device.friendlyName ?? device.uniqueID)")
-            // TODO 8: notifyDevicesChanged()
-            fatalError("TODO 8: notifyDevicesChanged()")
+            // TODO 6: notifyDevicesChanged()
+            fatalError("TODO 6: notifyDevicesChanged()")
         }
     }
 
@@ -336,7 +336,7 @@ extension GoogleCastProvider: GCKDiscoveryManagerListener {
 
 // MARK: - GCKSessionManagerListener
 // ╔═══════════════════════════════════════════════════════════════════════════╗
-// ║  TODO 9: Handle successful Chromecast connection (iOS) - 2 lines         ║
+// ║  TODO 8: Handle successful Chromecast connection (iOS) - 2 lines         ║
 // ╚═══════════════════════════════════════════════════════════════════════════╝
 //
 // 👉 ADD in didStart session:
@@ -363,7 +363,7 @@ extension GoogleCastProvider: GCKDiscoveryManagerListener {
 // difference is Swift's delegate pattern vs Kotlin's listener interface.
 //
 // ───────────────────────────────────────────────────────────────────────────────
-// 🎯 WHY These Two Lines Matter (Same as Android TODO 7)
+// 🎯 WHY These Two Lines Matter (Same as Android TODO 7 pattern)
 // ───────────────────────────────────────────────────────────────────────────────
 //
 // Line 1: castSession.remoteMediaClient?.add(self)
@@ -402,11 +402,11 @@ extension GoogleCastProvider: GCKSessionManagerListener {
         Task { @MainActor in
             log("Session started: \(session.sessionID ?? "unknown")")
 
-            // TODO 9: Register for playback updates and notify Flutter
+            // TODO 8: Register for playback updates and notify Flutter
             // 👉 ADD: castSession.remoteMediaClient?.add(self)
             // 👉 ADD: notifyState(connectionState: .connected, connectedDevice: castSession.toDevice())
             guard let castSession = session as? GCKCastSession else { return }
-            fatalError("TODO 9: Register callback and notify CONNECTED state")
+            fatalError("TODO 8: Register callback and notify CONNECTED state")
         }
     }
 

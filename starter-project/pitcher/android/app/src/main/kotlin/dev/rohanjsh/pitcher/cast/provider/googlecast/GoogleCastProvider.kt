@@ -40,7 +40,7 @@ class GoogleCastProvider(
     private var currentMedia: MediaInfo? = null
 
     // ╔═══════════════════════════════════════════════════════════════════════════╗
-    // ║  TODO 6: Notify Flutter when Chromecast devices are discovered (1 line)  ║
+    // ║  TODO 5: Notify Flutter when Chromecast devices are discovered (1 line)  ║
     // ╚═══════════════════════════════════════════════════════════════════════════╝
     //
     // 👉 ADD in onRouteAdded: notifyDevicesChanged()
@@ -106,7 +106,7 @@ class GoogleCastProvider(
     private val discoveryCallback = object : MediaRouter.Callback() {
         override fun onRouteAdded(router: MediaRouter, route: MediaRouter.RouteInfo) {
             log("Route added: ${route.name}")
-            TODO("TODO 6: notifyDevicesChanged()")
+            TODO("TODO 5: notifyDevicesChanged()")
         }
 
         override fun onRouteRemoved(router: MediaRouter, route: MediaRouter.RouteInfo) {

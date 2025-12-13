@@ -48,7 +48,7 @@ final class AirPlayProvider: NSObject, CastProviderContract {
     func startDiscovery() {
         log("Starting route detection...")
         // ╔═══════════════════════════════════════════════════════════════════════╗
-        // ║  TODO 3: Enable AirPlay route detection (1 line)                      ║
+        // ║  TODO 4: Enable AirPlay route detection (1 line)                      ║
         // ╚═══════════════════════════════════════════════════════════════════════╝
         //
         // 👉 ADD: routeDetector.isRouteDetectionEnabled = true
@@ -99,7 +99,7 @@ final class AirPlayProvider: NSObject, CastProviderContract {
         // ───────────────────────────────────────────────────────────────────────────
         // ✅ RESULT: After this TODO, "AirPlay" will appear in the device list!
         // ───────────────────────────────────────────────────────────────────────────
-        fatalError("TODO 3: routeDetector.isRouteDetectionEnabled = true")
+        fatalError("TODO 4: routeDetector.isRouteDetectionEnabled = true")
 
         notifyDevicesChanged()
     }
@@ -156,7 +156,7 @@ final class AirPlayProvider: NSObject, CastProviderContract {
         player = AVPlayer(playerItem: playerItem)
 
         // ╔═══════════════════════════════════════════════════════════════════════╗
-        // ║  TODO 4: Enable AirPlay on AVPlayer (2 lines)                         ║
+        // ║  TODO 9: Enable AirPlay on AVPlayer (2 lines)                         ║
         // ╚═══════════════════════════════════════════════════════════════════════╝
         //
         // 👉 ADD: player?.allowsExternalPlayback = true
@@ -211,7 +211,7 @@ final class AirPlayProvider: NSObject, CastProviderContract {
         // ───────────────────────────────────────────────────────────────────────────
         // ✅ RESULT: After this TODO, video/audio will play on the AirPlay device!
         // ───────────────────────────────────────────────────────────────────────────
-        fatalError("TODO 4: Enable AirPlay external playback")
+        fatalError("TODO 9: Enable AirPlay external playback")
 
         setupPlayerObservers()
 
