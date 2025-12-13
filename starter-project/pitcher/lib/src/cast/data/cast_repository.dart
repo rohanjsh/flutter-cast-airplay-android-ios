@@ -8,7 +8,49 @@ import 'cast_api.g.dart';
 
 class CastRepository implements CastFlutterApi {
   CastRepository() {
-    CastFlutterApi.setUp(this);
+    // ╔═══════════════════════════════════════════════════════════════════════╗
+    // ║  TODO 1: Register this class to receive native callbacks (1 line)     ║
+    // ╚═══════════════════════════════════════════════════════════════════════╝
+    //
+    // 👉 ADD: CastFlutterApi.setUp(this);
+    //
+    // ───────────────────────────────────────────────────────────────────────────
+    // 📚 CONCEPT: Pigeon's Bidirectional Communication
+    // ───────────────────────────────────────────────────────────────────────────
+    // Pigeon generates TWO API classes from the same .dart definition:
+    //
+    //   ┌─────────────────┐                    ┌─────────────────┐
+    //   │  CastHostApi    │  Flutter → Native  │  CastFlutterApi │
+    //   │  (we call it)   │ =================> │  (native calls) │
+    //   └─────────────────┘                    └─────────────────┘
+    //
+    // CastFlutterApi.setUp() registers a Dart object as the "receiver" for
+    // method channel calls coming FROM native code. It wires up a
+    // MethodChannel listener that deserializes incoming messages and routes
+    // them to your callback implementations (onDevicesChanged, onStateChanged).
+    //
+    // ───────────────────────────────────────────────────────────────────────────
+    // ⚠️ COMMON PITFALL: "My callbacks never fire!"
+    // ───────────────────────────────────────────────────────────────────────────
+    // If you forget this line, native code will invoke methods on the channel
+    // but there's no listener on the Dart side. The calls silently succeed
+    // from native's perspective but no Dart code ever executes.
+    //
+    // 🔍 DEBUGGING: Add a breakpoint in onDevicesChanged(). If it never hits
+    //    after native calls notifyDevicesChanged(), you forgot this setUp().
+    //
+    // ───────────────────────────────────────────────────────────────────────────
+    // 🏭 PRODUCTION NOTE: Singleton Pattern
+    // ───────────────────────────────────────────────────────────────────────────
+    // In production, CastRepository should be a singleton (via get_it/injectable).
+    // Calling setUp() multiple times with different instances will override
+    // the previous handler - only the LAST registered instance receives calls.
+    //
+    // ───────────────────────────────────────────────────────────────────────────
+    // ✅ RESULT: After this TODO, native callbacks will reach Flutter.
+    //    The device list and connection state will update in real-time.
+    // ───────────────────────────────────────────────────────────────────────────
+    throw UnimplementedError('TODO 1: CastFlutterApi.setUp(this)');
   }
 
   final CastHostApi _hostApi = CastHostApi();
@@ -22,6 +64,8 @@ class CastRepository implements CastFlutterApi {
   Stream<List<CastDevice>> get devices => _devicesController.stream;
   Stream<CastSessionState> get state => _stateController.stream;
 
+  // These callbacks are invoked by native code via Pigeon.
+  // Forward events to streams so CastService can react to state changes.
   @override
   void onDevicesChanged(List<CastDevice> devices) {
     _devicesController.add(devices);

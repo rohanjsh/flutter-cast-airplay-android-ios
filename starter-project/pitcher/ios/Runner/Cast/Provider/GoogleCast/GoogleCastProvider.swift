@@ -90,6 +90,43 @@ final class GoogleCastProvider: NSObject, CastProviderContract {
 
     // MARK: - CastPlaybackCapable
 
+    // ╔═══════════════════════════════════════════════════════════════════════════╗
+    // ║  TODO 11: Load media onto the Chromecast - iOS (1 line)                   ║
+    // ╚═══════════════════════════════════════════════════════════════════════════╝
+    //
+    // 👉 ADD after currentMedia = mediaInfo:
+    //     client.loadMedia(castMediaInfo, with: loadOptions)
+    //
+    // ───────────────────────────────────────────────────────────────────────────────
+    // 📚 CONCEPT: GCKRemoteMediaClient - Your Chromecast Remote Control
+    // ───────────────────────────────────────────────────────────────────────────────
+    //
+    //   ┌─────────────────────────────────────────────────────────────────────────┐
+    //   │                 Flutter → Native → Chromecast Flow                      │
+    //   │                                                                         │
+    //   │   Flutter MediaInfo          GCKMediaLoadOptions         Chromecast     │
+    //   │   ┌──────────────┐           ┌─────────────────┐        ┌────────┐     │
+    //   │   │ contentUrl   │ ────────▶ │ autoplay        │──────▶ │ 🎬     │     │
+    //   │   │ title        │   Pigeon  │ playPosition    │        │ Video! │     │
+    //   │   │ mediaType    │           └─────────────────┘        └────────┘     │
+    //   │   └──────────────┘                                                     │
+    //   └─────────────────────────────────────────────────────────────────────────┘
+    //
+    // iOS uses GCKMediaLoadOptions (similar to Android's MediaLoadRequestData):
+    //   - autoplay: Start playing immediately or pause on load
+    //   - playPosition: Start position in seconds (note: iOS uses TimeInterval!)
+    //
+    // ───────────────────────────────────────────────────────────────────────────────
+    // ⚠️ iOS vs Android DIFFERENCE: Time Units!
+    // ───────────────────────────────────────────────────────────────────────────────
+    //   iOS:     TimeInterval (seconds as Double)     → playPosition = 5.0
+    //   Android: Long (milliseconds)                  → currentTime = 5000
+    //
+    //   That's why we divide by 1000.0 when converting from Flutter's milliseconds!
+    //
+    // ───────────────────────────────────────────────────────────────────────────────
+    // ✅ RESULT: After this TODO, video plays on the Chromecast from iOS!
+    // ───────────────────────────────────────────────────────────────────────────────
     func loadMedia(_ mediaInfo: MediaInfo, autoplay: Bool, positionMs: Int64) {
         guard let client = remoteMediaClient else {
             log("Cannot load media: no active session")
@@ -116,7 +153,8 @@ final class GoogleCastProvider: NSObject, CastProviderContract {
         loadOptions.autoplay = autoplay
         loadOptions.playPosition = TimeInterval(positionMs) / 1000.0
 
-        client.loadMedia(castMediaInfo, with: loadOptions)
+        // TODO 11: Load media onto Chromecast
+        fatalError("TODO 11: client.loadMedia(castMediaInfo, with: loadOptions)")
     }
 
     func play() {
@@ -227,13 +265,57 @@ final class GoogleCastProvider: NSObject, CastProviderContract {
 }
 
 // MARK: - GCKDiscoveryManagerListener
+// ╔═══════════════════════════════════════════════════════════════════════════╗
+// ║  TODO 8: Notify Flutter when Chromecast devices are discovered (iOS)     ║
+// ╚═══════════════════════════════════════════════════════════════════════════╝
+//
+// 👉 ADD in didInsert: notifyDevicesChanged()
+//
+// ───────────────────────────────────────────────────────────────────────────────
+// 📚 CONCEPT: GCKDiscoveryManager vs Android MediaRouter
+// ───────────────────────────────────────────────────────────────────────────────
+// iOS uses Google's GCKDiscoveryManager for Chromecast discovery. Compare:
+//
+//   ┌─────────────────────────┬──────────────────────────────────────────────┐
+//   │ iOS (GCKDiscoveryManager)│ Android (MediaRouter)                       │
+//   ├─────────────────────────┼──────────────────────────────────────────────┤
+//   │ didInsert(_:at:)        │ onRouteAdded()                               │
+//   │ didRemove(_:at:)        │ onRouteRemoved()                             │
+//   │ didUpdate(_:at:)        │ onRouteChanged()                             │
+//   │ GCKDevice               │ MediaRouter.RouteInfo                        │
+//   │ discoveryManager.add()  │ mediaRouter.addCallback()                    │
+//   └─────────────────────────┴──────────────────────────────────────────────┘
+//
+// Same Cast SDK, different platform APIs. The iOS version uses a delegate
+// pattern (GCKDiscoveryManagerListener) while Android uses callbacks.
+//
+// ───────────────────────────────────────────────────────────────────────────────
+// ⚠️ COMMON PITFALL: "Chromecast devices don't appear on iOS!"
+// ───────────────────────────────────────────────────────────────────────────────
+// 1. Check Info.plist has NSBonjourServices with _googlecast._tcp
+// 2. Check Info.plist has NSLocalNetworkUsageDescription
+// 3. User must tap "Allow" on the Local Network permission prompt
+// 4. discoveryManager.startDiscovery() must be called first
+//
+// ───────────────────────────────────────────────────────────────────────────────
+// 🔍 DEBUGGING: Why only didInsert?
+// ───────────────────────────────────────────────────────────────────────────────
+// Like Android TODO 6, we only need to add the TODO in didInsert because:
+//   • didRemove: Already has notifyDevicesChanged() (device disconnects)
+//   • didUpdate: Already has notifyDevicesChanged() (name updates)
+//   • didInsert: MISSING! This is why new devices don't appear
+//
+// ───────────────────────────────────────────────────────────────────────────────
+// ✅ RESULT: After this TODO, Chromecast devices appear in the iOS device list!
+// ───────────────────────────────────────────────────────────────────────────────
 
 extension GoogleCastProvider: GCKDiscoveryManagerListener {
 
     nonisolated func didInsert(_ device: GCKDevice, at index: UInt) {
         Task { @MainActor in
             log("Route added: \(device.friendlyName ?? device.uniqueID)")
-            notifyDevicesChanged()
+            // TODO 8: notifyDevicesChanged()
+            fatalError("TODO 8: notifyDevicesChanged()")
         }
     }
 
@@ -253,6 +335,59 @@ extension GoogleCastProvider: GCKDiscoveryManagerListener {
 }
 
 // MARK: - GCKSessionManagerListener
+// ╔═══════════════════════════════════════════════════════════════════════════╗
+// ║  TODO 9: Handle successful Chromecast connection (iOS) - 2 lines         ║
+// ╚═══════════════════════════════════════════════════════════════════════════╝
+//
+// 👉 ADD in didStart session:
+//     castSession.remoteMediaClient?.add(self)
+//     notifyState(connectionState: .connected, connectedDevice: castSession.toDevice())
+//
+// ───────────────────────────────────────────────────────────────────────────────
+// 📚 CONCEPT: GCKSessionManagerListener vs Android SessionManagerListener
+// ───────────────────────────────────────────────────────────────────────────────
+//
+//   ┌─────────────────────────────────┬──────────────────────────────────────┐
+//   │ iOS (GCKSessionManagerListener) │ Android (SessionManagerListener)     │
+//   ├─────────────────────────────────┼──────────────────────────────────────┤
+//   │ willStart session               │ onSessionStarting                    │
+//   │ didStart session                │ onSessionStarted ← YOU ARE HERE      │
+//   │ didFailToStart withError        │ onSessionStartFailed                 │
+//   │ willEnd session                 │ onSessionEnding                      │
+//   │ didEnd session withError        │ onSessionEnded                       │
+//   │ willResumeCastSession           │ onSessionResuming                    │
+//   │ didResumeCastSession            │ onSessionResumed                     │
+//   └─────────────────────────────────┴──────────────────────────────────────┘
+//
+// The Cast SDK provides near-identical APIs on both platforms. The main
+// difference is Swift's delegate pattern vs Kotlin's listener interface.
+//
+// ───────────────────────────────────────────────────────────────────────────────
+// 🎯 WHY These Two Lines Matter (Same as Android TODO 7)
+// ───────────────────────────────────────────────────────────────────────────────
+//
+// Line 1: castSession.remoteMediaClient?.add(self)
+// └── GCKRemoteMediaClient is YOUR controller for what plays on the Chromecast
+// └── add(self) subscribes to playback state changes via GCKRemoteMediaClientListener
+// └── Without this, you can SEND commands but won't RECEIVE status updates!
+//
+// Line 2: notifyState(connectionState: .connected, connectedDevice: ...)
+// └── This is the Flutter notification that triggers UI update
+// └── castSession.toDevice() extracts CastDevice info (name, model, ID)
+// └── Flutter's cast button turns from "connecting" spinner to "connected" icon
+//
+// ───────────────────────────────────────────────────────────────────────────────
+// ⚠️ CRITICAL: iOS uses GCKCastSession, Android uses CastSession
+// ───────────────────────────────────────────────────────────────────────────────
+// Despite similar names, these are different classes from different SDKs:
+//   • iOS: GoogleCast framework (GCK prefix) - Swift/Obj-C
+//   • Android: play-services-cast-framework - Kotlin/Java
+//
+// The session must be cast to GCKCastSession to access remoteMediaClient.
+//
+// ───────────────────────────────────────────────────────────────────────────────
+// ✅ RESULT: After this TODO, the connection indicator turns green on iOS!
+// ───────────────────────────────────────────────────────────────────────────────
 
 extension GoogleCastProvider: GCKSessionManagerListener {
 
@@ -267,14 +402,11 @@ extension GoogleCastProvider: GCKSessionManagerListener {
         Task { @MainActor in
             log("Session started: \(session.sessionID ?? "unknown")")
 
-            if let castSession = session as? GCKCastSession {
-                castSession.remoteMediaClient?.add(self)
-            }
-
-            notifyState(
-                connectionState: .connected,
-                connectedDevice: (session as? GCKCastSession)?.toDevice()
-            )
+            // TODO 9: Register for playback updates and notify Flutter
+            // 👉 ADD: castSession.remoteMediaClient?.add(self)
+            // 👉 ADD: notifyState(connectionState: .connected, connectedDevice: castSession.toDevice())
+            guard let castSession = session as? GCKCastSession else { return }
+            fatalError("TODO 9: Register callback and notify CONNECTED state")
         }
     }
 

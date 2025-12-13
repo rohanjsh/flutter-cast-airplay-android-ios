@@ -47,7 +47,60 @@ final class AirPlayProvider: NSObject, CastProviderContract {
 
     func startDiscovery() {
         log("Starting route detection...")
-        routeDetector.isRouteDetectionEnabled = true
+        // ╔═══════════════════════════════════════════════════════════════════════╗
+        // ║  TODO 3: Enable AirPlay route detection (1 line)                      ║
+        // ╚═══════════════════════════════════════════════════════════════════════╝
+        //
+        // 👉 ADD: routeDetector.isRouteDetectionEnabled = true
+        //
+        // ───────────────────────────────────────────────────────────────────────────
+        // 📚 CONCEPT: AVRouteDetector vs MediaRouter
+        // ───────────────────────────────────────────────────────────────────────────
+        // iOS uses AVRouteDetector for AirPlay discovery. Key differences from Android:
+        //
+        //   ┌─────────────────────┬──────────────────────────────────────────────┐
+        //   │ AVRouteDetector     │ Android MediaRouter                          │
+        //   ├─────────────────────┼──────────────────────────────────────────────┤
+        //   │ Boolean property    │ Callback-based (onRouteAdded/Removed)        │
+        //   │ Uses Bonjour (mDNS) │ Uses DIAL/SSDP protocols                     │
+        //   │ ~instant discovery  │ Can take 5-30 seconds                        │
+        //   │ Battery-efficient   │ More battery-intensive active scan           │
+        //   │ Single "available"  │ Individual device discovery                  │
+        //   └─────────────────────┴──────────────────────────────────────────────┘
+        //
+        // Why AirPlay shows ONE entry ("AirPlay") instead of each device?
+        // → Apple's UX philosophy: The system handles device selection via the
+        //   native picker (AVRoutePickerView). We just detect "routes available."
+        //
+        // ───────────────────────────────────────────────────────────────────────────
+        // ⚠️ COMMON PITFALL: "AirPlay never appears in the list!"
+        // ───────────────────────────────────────────────────────────────────────────
+        // 1. Check if an AirPlay device is ON and on the same WiFi network
+        // 2. AVRouteDetector ONLY detects when multipleRoutesDetected == true
+        //    (meaning there's more than just the built-in speaker)
+        // 3. Run on a REAL DEVICE - Simulator has no AirPlay support!
+        //
+        // ───────────────────────────────────────────────────────────────────────────
+        // 🔋 PRODUCTION: Battery Considerations
+        // ───────────────────────────────────────────────────────────────────────────
+        // Setting isRouteDetectionEnabled = true increases battery usage.
+        // Apple recommends:
+        //   • Only enable when your app is actively presenting media controls
+        //   • Disable when app goes to background (we do this in stopDiscovery)
+        //   • Consider using AVRouteDetector only when user opens the cast menu
+        //
+        // ───────────────────────────────────────────────────────────────────────────
+        // 🔍 DEBUGGING: How to verify this worked
+        // ───────────────────────────────────────────────────────────────────────────
+        // 1. Check Xcode console for "[AirPlayProvider] Starting route detection..."
+        // 2. If you have an Apple TV nearby, multipleRoutesDetected should be true
+        // 3. getDiscoveredDevices() should return 1 device with name "AirPlay"
+        //
+        // ───────────────────────────────────────────────────────────────────────────
+        // ✅ RESULT: After this TODO, "AirPlay" will appear in the device list!
+        // ───────────────────────────────────────────────────────────────────────────
+        fatalError("TODO 3: routeDetector.isRouteDetectionEnabled = true")
+
         notifyDevicesChanged()
     }
 
@@ -102,8 +155,63 @@ final class AirPlayProvider: NSObject, CastProviderContract {
         playerItem = AVPlayerItem(asset: asset)
         player = AVPlayer(playerItem: playerItem)
 
-        player?.allowsExternalPlayback = true
-        player?.usesExternalPlaybackWhileExternalScreenIsActive = true
+        // ╔═══════════════════════════════════════════════════════════════════════╗
+        // ║  TODO 4: Enable AirPlay on AVPlayer (2 lines)                         ║
+        // ╚═══════════════════════════════════════════════════════════════════════╝
+        //
+        // 👉 ADD: player?.allowsExternalPlayback = true
+        // 👉 ADD: player?.usesExternalPlaybackWhileExternalScreenIsActive = true
+        //
+        // ───────────────────────────────────────────────────────────────────────────
+        // 📚 CONCEPT: The Two AirPlay Properties Explained
+        // ───────────────────────────────────────────────────────────────────────────
+        //
+        // allowsExternalPlayback = true
+        // └── Enables AirPlay routing for this player instance
+        // └── Without this, video plays ONLY on the iPhone, even if AirPlay is active
+        // └── Default is true, but other code may have set it to false!
+        //
+        // usesExternalPlaybackWhileExternalScreenIsActive = true
+        // └── The "set it and forget it" flag
+        // └── When user selects AirPlay via Control Center or our picker,
+        //     playback AUTOMATICALLY switches to the external screen
+        // └── Without this, you'd need to handle AVAudioSession.routeChangeNotification
+        //     manually and call player.play() again after route switch
+        //
+        // ───────────────────────────────────────────────────────────────────────────
+        // 🎬 DEEP DIVE: What Happens Under the Hood
+        // ───────────────────────────────────────────────────────────────────────────
+        // When usesExternalPlaybackWhileExternalScreenIsActive = true and AirPlay
+        // connects, AVPlayer does the following automatically:
+        //
+        //   1. Pauses local playback (phone screen goes dark for video)
+        //   2. Opens a direct connection to the AirPlay receiver
+        //   3. Streams the media URL directly to the receiver (not through phone)
+        //   4. Phone becomes a "remote control" - play/pause/seek commands only
+        //   5. isExternalPlaybackActive becomes true (we observe this for UI updates)
+        //
+        // Compare to Chromecast: With Cast SDK, YOU must implement all of this!
+        //
+        // ───────────────────────────────────────────────────────────────────────────
+        // ⚠️ COMMON PITFALL: "Video plays locally but not on TV!"
+        // ───────────────────────────────────────────────────────────────────────────
+        // 1. Check allowsExternalPlayback isn't being set false elsewhere
+        // 2. Verify the media URL is accessible from the AirPlay receiver's network
+        //    (localhost URLs won't work - the Apple TV can't reach your dev server)
+        // 3. Some DRM-protected content blocks AirPlay (FairPlay Streaming exception)
+        //
+        // ───────────────────────────────────────────────────────────────────────────
+        // 🏭 PRODUCTION: Audio-only vs Video Content
+        // ───────────────────────────────────────────────────────────────────────────
+        // For audio-only content, consider using AVAudioSession's route instead:
+        //   • allowsExternalPlayback works but is video-focused
+        //   • For pure audio apps, MPNowPlayingInfoCenter integration is critical
+        //   • Audio continues playing through phone speaker + AirPlay simultaneously
+        //
+        // ───────────────────────────────────────────────────────────────────────────
+        // ✅ RESULT: After this TODO, video/audio will play on the AirPlay device!
+        // ───────────────────────────────────────────────────────────────────────────
+        fatalError("TODO 4: Enable AirPlay external playback")
 
         setupPlayerObservers()
 
