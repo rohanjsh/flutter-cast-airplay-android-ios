@@ -4,24 +4,27 @@ A Flutter app for casting media to Chromecast and AirPlay devices. Discover devi
 
 ## Features
 
-- 🔍 **Device Discovery** - Scan for Chromecast and AirPlay devices on your network
-- 📺 **Chromecast Support** - Full Google Cast SDK integration (Android & iOS)
-- 🍎 **AirPlay Support** - Native AVPlayer-based AirPlay streaming (iOS)
-- 🎵 **Audio/Video** - Toggle between audio and video casting modes
-- ▶️ **Transport Controls** - Play, pause, seek, skip, and volume control
+- **Device Discovery** - Scan for Chromecast and AirPlay devices on your network
+- **Chromecast Support** - Full Google Cast SDK integration (Android & iOS)
+- **AirPlay Support** - Native AVPlayer-based AirPlay streaming (iOS)
+- **Audio/Video** - Toggle between audio and video casting modes
+- **Transport Controls** - Play, pause, seek, skip, and volume control
 
 ## Architecture
 
 The app uses **Pigeon** for type-safe Flutter ↔ Native communication with layered architecture.
 
 ### Android Native Layer
-![Android Architecture](docs/art/android-layer.png)
+<img width="17051" height="10395" alt="android-layer" src="https://github.com/user-attachments/assets/6c98a8d4-141d-439b-b7cb-c8062dd105c8" />
+
 
 ### iOS Native Layer  
-![iOS Architecture](docs/art/ios-layer.png)
+<img width="17051" height="13866" alt="ios-layer" src="https://github.com/user-attachments/assets/b1d0f448-6582-4959-a46a-82bff40828c5" />
+
 
 ### Flutter & Pigeon Communication
-![Flutter Pigeon Architecture](docs/art/flutter-layer.png)
+<img width="21178" height="11380" alt="flutter-layer" src="https://github.com/user-attachments/assets/4f0d0670-81bc-4dc8-9c63-5eed21668767" />
+
 
 ## Getting Started
 
