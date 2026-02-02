@@ -1,4 +1,4 @@
-# Pitcher
+# Pitcher (Fluttercon India 2025)
 
 A Flutter app for casting media to Chromecast and AirPlay devices. Discover devices, connect, and control playback with a simple media player UI.
 
@@ -9,6 +9,24 @@ A Flutter app for casting media to Chromecast and AirPlay devices. Discover devi
 - **AirPlay Support** - Native AVPlayer-based AirPlay streaming (iOS)
 - **Audio/Video** - Toggle between audio and video casting modes
 - **Transport Controls** - Play, pause, seek, skip, and volume control
+
+## 📋 TODOs Checklist
+
+Complete these 11 TODOs to build a fully functional casting app:
+|  | Platform | File | Description |
+|---|----------|------|-------------|
+| 1 | Flutter | `cast_repository.dart` | Register this class to receive native callbacks |
+| 2 | iOS | `AppDelegate.swift` | Complete the Pigeon bridge setup |
+| 3 | Android | `MainActivity.kt` | Complete the Pigeon bridge setup |
+| 4 | iOS | `AirPlayProvider.swift` | Enable AirPlay route detection |
+| 5 | Android | `GoogleCastProvider.kt` | Notify Flutter when Chromecast devices are discovered |
+| 6 | iOS | `GoogleCastProvider.swift` | Notify Flutter when Chromecast devices are discovered |
+| 7 | Android | `GoogleCastProvider.kt` | Handle successful Chromecast connection |
+| 8 | iOS | `GoogleCastProvider.swift` | Handle successful Chromecast connection |
+| 9 | iOS | `AirPlayProvider.swift` | Enable AirPlay on AVPlayer |
+| 10 | Android | `GoogleCastProvider.kt` | Load media onto the Chromecast |
+| 11 | iOS | `GoogleCastProvider.swift` | Load media onto the Chromecast |
+
 
 ## Architecture
 
